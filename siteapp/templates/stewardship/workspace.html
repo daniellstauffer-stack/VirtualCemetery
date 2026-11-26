@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Steward Workspace — {{ owner.full_display_name }}{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div>
+    <strong>Steward Workspace</strong> for <strong>{{ owner.full_display_name }}</strong>
+    · Your role: {{ assignment.get_role_display }}{% if assignment.can_organize_funeral %} &amp; Funeral Organizer{% endif %}
+  </div>
+  <a href="{% url 'stewardship:manage' %}" class="btn btn-secondary btn-sm">All Stewardships</a>
+</div>
+
+<h1>Caring for {{ owner.full_display_name }}’s memorial</h1>
+
+{% if not owner.is_deceased_verified %}
+  <div class="card card-private">
+    <span class="tag tag-private">Account owner is living · Private plan locked</span>
+    <h2 style="margin-top:0.65rem;">What you can see right now</h2>
+    <p>
+      Because {{ owner.full_display_name }} is living (no death report has been verified and approved), <strong>all private wishes, contacts, and unpublished memories remain strictly hidden from you</strong>.
+    </p>
+    <p class="muted">
+      When the time comes, you may submit a private death report with supporting evidence. Submitting a report starts a confidential staff review—it never publishes anything or emails family automatically.
+    </p>
+    <div class="button-row">
+      <a href="{% url 'stewardship:submit_report' owner_person_id=owner.person_id %}" id="btn-submit-death-report" class="btn btn-warm">Submit a death report</a>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    <strong>Death verification approved.</strong> Only items {{ owner.full_display_name }} designated for steward release or memorial publication are shown below. Items marked <em>“Only me”</em> remain permanently private.
+  </div>
+
+  <div class="grid-2" style="margin-bottom:1.5rem;">
+    <div class="card card-memorial">
+      <span class="eyebrow">Separate Action 1 · The Memorial</span>
+      <h2>Prepare &amp; publish memorial</h2>
+      <p class="muted">Select from the memories {{ owner.full_display_name }} allowed, optionally add a family tribute with your author credit, preview, and publish within their audience ceiling.</p>
+      <div class="button-row">
+        <a href="{% url 'memorials:prepare_release' owner_person_id=owner.person_id %}" id="btn-prepare-release" class="btn btn-primary">Prepare / update memorial</a>
+        {% if memorial %}
+          <a href="{% url 'memorials:detail' slug=memorial.slug %}" class="btn btn-secondary">View published memorial</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card card-private">
+      <span class="eyebrow">Separate Action 2 · Funeral Service</span>
+      <h2>Organize service &amp; invitations</h2>
+      <p class="muted">Arranging a funeral and sending individual invitations is completely separate from publishing the memorial page—you can coordinate the service immediately even if the family wants more time for the memorial.</p>
+      {% if assignment.can_organize_funeral %}
+        <div class="button-row">
+          <a href="{% url 'events:create_event' owner_person_id=owner.person_id %}" id="btn-create-funeral-event" class="btn btn-warm">Prepare funeral invitations</a>
+          <a href="{% url 'events:owner_contacts' owner_person_id=owner.person_id %}" class="btn btn-secondary">View funeral contact list</a>
+        </div>
+      {% else %}
+        <p class="muted"><em>You were not assigned the Funeral Organizer role on this account.</em></p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Memories released to your steward role ({{ released_memories|length }})</h2>
+    {% if released_memories %}
+      <div class="grid-2">
+        {% for m in released_memories %}
+          <article class="memory-card">
+            <div class="memory-card-body">
+              <span class="tag tag-memorial">{{ m.get_audience_display }}</span>
+              <h3 style="margin-top:0.5rem;">{{ m.title }}</h3>
+              <p class="muted">{{ m.story }}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No memories were designated for release.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if reports %}
+<div class="card">
+  <h2>Verification case status</h2>
+  <p class="muted">Stewards see case status and timing explanations without access to raw staff evidence.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Case</th><th>Submitted</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for r in reports %}
+          <tr>
+            <td><code>{{ r.id|stringformat:"s"|slice:":8" }}</code></td>
+            <td>{{ r.created_at|date:"M j, Y · g:i A" }}</td>
+            <td><span class="tag tag-warn">{{ r.get_status_display }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" style="margin-top:0.75rem;margin-bottom:0;">
+    Questions about review timing? Contact support at <a href="mailto:{{ SITE_SUPPORT_EMAIL }}">{{ SITE_SUPPORT_EMAIL }}</a>.
+  </p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Prepare Funeral Event{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Funeral Event Setup</strong> for {{ owner.full_display_name }} — Location and livestream details stay strictly within the event audience.</div>
+  <a href="{% url 'events:owner_contacts' owner_person_id=owner.person_id %}" class="btn btn-secondary btn-sm">Back to guest list</a>
+</div>
+
+<div class="card">
+  <h1>{% if event %}Edit funeral event{% else %}Prepare funeral event details{% endif %}</h1>
+  <p class="muted">Saving these details does NOT send any invitations. On the next screen you will preview the exact date, time zone, location, wording, and recipient list before sending.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <button type="submit" id="btn-save-event" class="btn btn-primary">Save &amp; preview invitations</button>
+  </form>
+</div>
+{% endblock %}

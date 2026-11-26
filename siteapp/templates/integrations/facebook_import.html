@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Import Memories from Facebook Archive{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Guided Facebook Archive Import</strong> — Preview first, exclude messages &amp; other people’s posts, cancel anytime.</div>
+  <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary btn-sm">Back to My Plan</a>
+</div>
+
+<h1>Import selected stories from your Facebook export</h1>
+<p class="lead">
+  Upload your own downloaded Facebook JSON posts file (such as <code>your_posts_1.json</code>). We exclude private messages and other people's posts, flag duplicates, and discard the upload immediately after you choose what to keep.
+</p>
+
+{% if not preview_items %}
+  <div class="card">
+    <h2>Step 1: Upload JSON export for preview</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="upload">
+      <div class="form-field">
+        <label for="id-fb-archive">Facebook JSON export file (max 5 MB)</label>
+        <input type="file" id="id-fb-archive" name="archive_file" accept=".json,application/json" required>
+      </div>
+      <button type="submit" id="btn-fb-preview" class="btn btn-primary">Preview items before saving</button>
+    </form>
+  </div>
+{% else %}
+  <div class="card">
+    <h2>Step 2: Choose which items to save ({{ preview_items|length }} found)</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="confirm">
+      <div class="form-field">
+        <label for="id-default-aud">Default audience for imported items</label>
+        <select id="id-default-aud" name="default_audience">
+          <option value="private_only">Only me (stays private forever)</option>
+          <option value="invited_memorial">May appear on my memorial for invited family</option>
+        </select>
+      </div>
+      <ul class="checkbox-list" style="margin-bottom:1.25rem;">
+        {% for item in preview_items %}
+          <li style="padding:0.75rem;border:1px solid var(--border-stone);border-radius:var(--radius-sm);margin-bottom:0.5rem;">
+            <label class="checkbox-inline">
+              <input type="checkbox" name="selected_items" value="{{ item.external_id }}" {% if not item.is_duplicate %}checked{% else %}disabled{% endif %}>
+              <span>
+                <strong>{{ item.title }}</strong>{% if item.year_taken %} ({{ item.year_taken }}){% endif %}
+                {% if item.is_duplicate %}<span class="tag tag-warn">Already imported (duplicate)</span>{% endif %}
+                <div class="muted">{{ item.story|truncatewords:30 }}</div>
+              </span>
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="form-field">
+        <label class="checkbox-inline">
+          <input type="checkbox" name="confirm_ownership" value="yes" required>
+          <span><strong>I confirm I wrote/own these selected stories and photographs or have permission to save them in My Plan.</strong></span>
+        </label>
+      </div>
+      <div class="button-row">
+        <button type="submit" id="btn-fb-confirm" class="btn btn-primary">Save selected items</button>
+      </div>
+    </form>
+    <form method="post" style="margin-top:0.75rem;">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="cancel">
+      <button type="submit" class="btn btn-secondary btn-sm">Cancel &amp; discard preview</button>
+    </form>
+  </div>
+{% endif %}
+
+<div class="card card-private">
+  <h2>Connected Facebook Login &amp; Graph API status (Placeholder)</h2>
+  <p class="muted">
+    Status: <strong>{% if facebook_login_enabled %}Enabled{% else %}Gated pending Meta App Review{% endif %}</strong> ·
+    App ID: <code>{{ facebook_app_id }}</code> · Graph API: <code>{{ facebook_api_version }}</code>.
+  </p>
+  <p class="muted" style="margin-bottom:0;">
+    Direct connected-account import requires Meta App Review approval. A Virtual Cemetery steward never gains automatic access to anyone’s Facebook account; Facebook controls its own legacy/memorialization process separately.
+  </p>
+</div>
+{% endblock %}

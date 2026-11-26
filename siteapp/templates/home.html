@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}A Private Place to Plan Ahead, a Lasting Place to Remember{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="hero-content">
+    <span class="eyebrow">One account, two distinct spaces</span>
+    <h1 id="hero-heading">Tell your stories in your own words. Choose who may see them.</h1>
+    <p class="lead">
+      Virtual Cemetery gives you a quiet, private workspace to record your wishes and memories today—and gives the person you trust a careful, verified way to share your memorial with family when the time comes.
+    </p>
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+        <a href="{% url 'planning:dashboard' %}" id="cta-open-plan" class="btn btn-primary">Open My Plan (Private)</a>
+        <a href="{% url 'memorials:owner_preview' %}" id="cta-preview-memorial" class="btn btn-secondary">Preview My Memorial</a>
+      {% else %}
+        <a href="{% url 'accounts:register' %}" id="cta-start-plan" class="btn btn-primary">Start My Private Plan</a>
+        <a href="{% url 'accounts:login' %}" id="cta-sign-in" class="btn btn-secondary">Sign in (or try pilot family demo)</a>
+      {% endif %}
+    </div>
+    <p class="muted" style="margin-top:1.1rem;margin-bottom:0;">
+      Default audience is always <strong>invited family only</strong>. Public memorials and site search each require an explicit choice.
+    </p>
+  </div>
+  <div class="hero-media">
+    <img src="{% static 'images/hero-garden.jpg' %}" alt="Sunlight filtering through tall green trees onto a quiet botanical garden path.">
+  </div>
+</section>
+
+<section aria-labelledby="two-spaces-heading" style="margin-bottom:2.5rem;">
+  <h2 id="two-spaces-heading">Two clearly separated spaces</h2>
+  <div class="grid-2">
+    <article class="card card-private">
+      <span class="tag tag-private">Private workspace</span>
+      <h3 style="margin-top:0.65rem;">My Plan</h3>
+      <p>
+        A private place for a living person. Record burial or cremation preferences, service wishes, emergency contacts, where important papers are kept, and memories you are considering sharing.
+      </p>
+      <p class="muted" style="margin-bottom:0;">
+        Nothing inside My Plan is ever searchable or visible to visitors. Every memory has its own clear audience setting.
+      </p>
+    </article>
+
+    <article class="card card-memorial">
+      <span class="tag tag-memorial">Shared remembrance</span>
+      <h3 style="margin-top:0.65rem;">The Memorial</h3>
+      <p>
+        A separate, lasting page with your chosen name, portrait, life story, selected gallery, and moderated guestbook. Preview it while you are alive so you know exactly what family will see.
+      </p>
+      <p class="muted" style="margin-bottom:0;">
+        Published only after a trained reviewer verifies a death report and gives the living owner a chance to challenge any error.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="how-it-works-heading" class="card" style="margin-bottom:2.5rem;">
+  <h2 id="how-it-works-heading">From a private plan to a verified memorial</h2>
+  <div class="grid-3">
+    <div>
+      <span class="eyebrow">Step 1 · Prepare</span>
+      <h3>Choose stories &amp; a steward</h3>
+      <p class="muted">Select photos, confirm who may see each one, preview your memorial, and invite a trusted steward (“the person who manages my memorial”). Revoke access anytime.</p>
+    </div>
+    <div>
+      <span class="eyebrow">Step 2 · Verify carefully</span>
+      <h3>Human review, never guesswork</h3>
+      <p class="muted">Inactivity never triggers a report. A trained staff reviewer checks independent evidence, contacts the owner directly, and pauses any conflicting claim for a second reviewer.</p>
+    </div>
+    <div>
+      <span class="eyebrow">Step 3 · Share separately</span>
+      <h3>Publish &amp; organize on your schedule</h3>
+      <p class="muted">Publishing a memorial, releasing designated funeral wishes, and sending funeral invitations are separate deliberate actions—never automated blasts.</p>
+    </div>
+  </div>
+</section>
+
+{% if featured_memorials %}
+<section aria-labelledby="public-memorials-heading">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;">
+    <div>
+      <h2 id="public-memorials-heading" style="margin-bottom:0.2rem;">Opt-in public memorials</h2>
+      <p class="muted" style="margin-bottom:0;">Shown here only because their owners or authorized families explicitly chose public discovery.</p>
+    </div>
+    <a href="{% url 'memorials:discover' %}" class="btn btn-secondary btn-sm">Browse all public memorials</a>
+  </div>
+
+  <div class="grid-3">
+    {% for mem in featured_memorials %}
+      <article class="memory-card">
+        <div class="memory-card-media">
+          {% if mem.portrait_storage_path %}
+            <img src="{% url 'memorials:portrait_image' slug=mem.slug %}" alt="{{ mem.portrait_alt_text }}">
+          {% elif mem.portrait_static_asset %}
+            <img src="{% static 'images/' %}{{ mem.portrait_static_asset }}" alt="{{ mem.portrait_alt_text }}">
+          {% else %}
+            <img src="{% static 'images/hero-garden.jpg' %}" alt="Quiet sunlit garden path.">
+          {% endif %}
+        </div>
+        <div class="memory-card-body">
+          <span class="muted">{{ mem.life_dates_display }}</span>
+          <h3 style="margin-top:0.2rem;">{{ mem.full_name }}</h3>
+          <p class="muted" style="flex:1;">{{ mem.biography|truncatewords:24 }}</p>
+          <a href="{% url 'memorials:detail' slug=mem.slug %}" class="btn btn-secondary btn-sm">Visit memorial</a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

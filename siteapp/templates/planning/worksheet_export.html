@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Private Planning Worksheet — {{ owner.full_display_name }}</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 740px; margin: 2rem auto; line-height: 1.6; color: #222; padding: 0 1rem; }
+    .notice { border: 2px solid #8c4a27; background: #fdf6ef; padding: 1rem; margin: 1.25rem 0; font-family: sans-serif; font-size: 0.95rem; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; margin-top: 1.75rem; }
+  </style>
+</head>
+<body>
+  <h1>Estate-Planning Preparation Worksheet</h1>
+  <p><strong>Prepared by:</strong> {{ owner.full_display_name }}<br>
+     <strong>Jurisdiction:</strong> {{ worksheet.jurisdiction }}<br>
+     <strong>Dated:</strong> {{ generated_at|date:"F j, Y · g:i A T" }}</p>
+
+  <div class="notice">
+    <strong>NOT A LEGAL WILL:</strong> This private dated worksheet is designed to help you organize wishes and questions for a qualified estate-planning attorney in {{ worksheet.jurisdiction }}. It conveys no promise that a legal will has been made.
+  </div>
+
+  <h2>Dependants</h2>
+  <p>{{ worksheet.dependants_summary|default:"(Not specified)"|linebreaksbr }}</p>
+
+  <h2>Proposed Guardians</h2>
+  <p>{{ worksheet.proposed_guardians|default:"(Not specified)"|linebreaksbr }}</p>
+
+  <h2>Categories of Assets (No account numbers or passwords)</h2>
+  <p>{{ worksheet.asset_categories|default:"(Not specified)"|linebreaksbr }}</p>
+
+  <h2>Intended Gifts &amp; Keepsakes</h2>
+  <p>{{ worksheet.intended_gifts|default:"(Not specified)"|linebreaksbr }}</p>
+
+  <h2>Executor / Personal Representative Preferences</h2>
+  <p>{{ worksheet.executor_preferences|default:"(Not specified)"|linebreaksbr }}</p>
+
+  <h2>Questions for Estate Counsel</h2>
+  <p>{{ worksheet.questions_for_counsel|default:"(Not specified)"|linebreaksbr }}</p>
+</body>
+</html>

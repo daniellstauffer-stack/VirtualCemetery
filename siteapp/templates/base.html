@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scale-{{ TEXT_SCALE|default:'normal' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Virtual Cemetery{% endblock %} — Virtual Cemetery</title>
+  <meta name="description" content="{% block meta_description %}A private place to plan ahead in your own words, and a lasting, dignified place for families to remember someone.{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="header-utility no-print">
+      <div class="container header-utility-inner">
+        <span>Pilot region: {{ PILOT_JURISDICTION }} · <a href="{% url 'stewardship:dispute' %}">Report an error or dispute a case</a></span>
+        <form method="post" action="{% url 'accounts:text_scale' %}" class="text-scale-controls" aria-label="Text size">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <span>Text size:</span>
+          <button type="submit" name="scale" value="normal" class="text-scale-btn" aria-pressed="{% if TEXT_SCALE == 'normal' %}true{% else %}false{% endif %}">A</button>
+          <button type="submit" name="scale" value="large" class="text-scale-btn" aria-pressed="{% if TEXT_SCALE == 'large' %}true{% else %}false{% endif %}">A+</button>
+          <button type="submit" name="scale" value="xlarge" class="text-scale-btn" aria-pressed="{% if TEXT_SCALE == 'xlarge' %}true{% else %}false{% endif %}">A++</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="container header-main">
+      <a href="{% url 'home' %}" class="brand">
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span class="brand-title">Virtual Cemetery</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="{% url 'memorials:discover' %}">Memorials</a>
+        <a href="{% url 'integrations:directory' %}">Local Directory</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'planning:dashboard' %}">My Plan</a>
+          <a href="{% url 'memorials:owner_preview' %}">Preview Memorial</a>
+          <a href="{% url 'stewardship:manage' %}">Stewards{% if PENDING_STEWARD_INVITES_COUNT %} <span class="nav-badge" aria-label="{{ PENDING_STEWARD_INVITES_COUNT }} pending">{{ PENDING_STEWARD_INVITES_COUNT }}</span>{% endif %}</a>
+          <a href="{% url 'events:contacts' %}">Funeral List</a>
+          {% if user.is_verified_reviewer %}
+            <a href="{% url 'stewardship:staff_desk' %}">Staff Review{% if PENDING_REVIEW_CASES_COUNT %} <span class="nav-badge">{{ PENDING_REVIEW_CASES_COUNT }}</span>{% endif %}</a>
+          {% endif %}
+          <a href="{% url 'accounts:profile' %}">Account</a>
+          <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">Sign out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'policies' %}">Policies</a>
+          <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-sm">Sign in</a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Start My Plan</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <div class="container {% block container_class %}{% endblock %}">
+      {% if messages %}
+        <div role="status" aria-live="polite" class="no-print">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <footer class="site-footer no-print">
+    <div class="container footer-grid">
+      <div>
+        <strong style="font-family:var(--font-serif);font-size:1.1rem;color:var(--ink-primary);">Virtual Cemetery</strong>
+        <p class="muted" style="margin-top:0.4rem;">
+          A private space to plan ahead in your own words, and a lasting place for families to remember someone.
+          Default audience is always invited family—never public without an explicit choice.
+        </p>
+      </div>
+      <div>
+        <strong>Trust &amp; Policies</strong>
+        <ul class="footer-links" style="margin-top:0.4rem;">
+          <li><a href="{% url 'policies' %}">Verification, retention &amp; closure policies</a></li>
+          <li><a href="{% url 'stewardship:dispute' %}">Challenge or dispute a death report</a></li>
+          <li><a href="{% url 'integrations:support_site' %}">Support the site (optional)</a></li>
+          <li><a href="{% url 'integrations:directory' %}">Local funeral homes &amp; estate counsel</a></li>
+        </ul>
+      </div>
+      <div>
+        <strong>Family Tools</strong>
+        <ul class="footer-links" style="margin-top:0.4rem;">
+          <li><a href="{% url 'memorials:discover' %}">Public memorials (opt-in only)</a></li>
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'planning:wishes_wizard' %}">“Draft my wishes” worksheet</a></li>
+            <li><a href="{% url 'integrations:facebook_import' %}">Import from Facebook archive</a></li>
+            <li><a href="{% url 'integrations:contact_import' %}">Import funeral contacts (CSV/vCard)</a></li>
+            <li><a href="{% url 'integrations:status' %}">Connected services &amp; placeholders</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/app.js' %}" defer></script>
+</body>
+</html>

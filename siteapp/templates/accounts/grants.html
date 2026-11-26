@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Private Plan Access Grants{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Private Access Grants</strong> — Share specific funeral instructions with a named person under your timing rules.</div>
+  <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary btn-sm">Back to My Plan</a>
+</div>
+
+<h1>Who can read parts of my private plan</h1>
+<p class="lead">
+  You decide if a named person may read a specific section—such as your funeral wishes or contact list—either while you are alive or only after a verified death. You can revoke any grant immediately.
+</p>
+
+<div class="split-layout">
+  <div>
+    <div class="card">
+      <h2>Grants you have given</h2>
+      {% if outgoing_grants %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Recipient</th><th>Section</th><th>Timing</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for g in outgoing_grants %}
+                <tr>
+                  <td>{{ g.recipient_email }}</td>
+                  <td>{{ g.get_scope_display }}</td>
+                  <td>{{ g.get_release_timing_display }}</td>
+                  <td>
+                    {% if g.is_active %}
+                      <span class="tag tag-private">Active</span>
+                    {% else %}
+                      <span class="tag tag-neutral">Revoked</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if g.is_active %}
+                      <form method="post" action="{% url 'accounts:revoke_grant' grant_id=g.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">You have not granted anyone access to sections of your private plan yet.</p>
+      {% endif %}
+    </div>
+
+    {% if incoming_grants %}
+      <div class="card card-private">
+        <h2>Instructions shared with you</h2>
+        {% for g in incoming_grants %}
+          <p>
+            <strong>{{ g.owner.full_display_name }}</strong> shared <em>{{ g.get_scope_display }}</em> with you.
+            <a href="{% url 'planning:shared_plan' owner_person_id=g.owner.person_id %}">Open shared instructions</a>
+          </p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Create a new grant</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary">Save access grant</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

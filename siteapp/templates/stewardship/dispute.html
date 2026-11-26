@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Dispute or Challenge a Death Report{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">No sign-in required · Urgent protection</span>
+  <h1>Challenge a mistaken death report or dispute a memorial</h1>
+  <p>
+    If you are a living account owner who received a challenge notice, or a family member disputing a death report or competing claim, submit this form immediately. Any pending verification case will be <strong>paused automatically</strong> for senior review.
+  </p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <button type="submit" id="btn-submit-dispute" class="btn btn-danger">Submit urgent dispute</button>
+  </form>
+</div>
+{% endblock %}

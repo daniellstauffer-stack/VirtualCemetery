@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Decline Further Messages{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Manage invitation preferences</h1>
+  {% if contact.opted_out %}
+    <div class="alert alert-success">
+      <strong>{{ contact.email }}</strong> is opted out and will not receive further funeral or memorial notices from this list.
+    </div>
+  {% else %}
+    <p>You are managing notices for <strong>{{ contact.email }}</strong>. Click below if you prefer not to receive further messages from this family list.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" id="btn-confirm-opt-out" class="btn btn-secondary">Decline further messages</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

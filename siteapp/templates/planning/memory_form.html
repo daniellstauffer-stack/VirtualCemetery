@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit Memory{% else %}Add a Memory{% endif %}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>My Plan (Private)</strong> — Uploaded photos have camera location (EXIF/GPS) metadata automatically stripped.</div>
+  <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary btn-sm">Back to My Plan</a>
+</div>
+
+<div class="card">
+  <h1>{% if is_edit %}Edit memory &amp; audience{% else %}Add a photograph &amp; story{% endif %}</h1>
+  <p class="muted">Tell the story behind this photograph in your own words, then choose clearly who will be able to see it.</p>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field {% if field.name == 'audience' %}radio-group{% endif %}">
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <label class="checkbox-inline" for="{{ field.id_for_label }}">
+            {{ field }} <span><strong>{{ field.label }}</strong></span>
+          </label>
+        {% else %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+
+    <div class="alert alert-info" aria-live="polite">
+      <strong>What this audience setting means:</strong>
+      <span id="audience-live-summary">
+        {% if memory %}{{ memory.audience_plain_summary }}{% else %}Only you can see this. Even after death, it stays private and is never released to your steward or visitors.{% endif %}
+      </span>
+    </div>
+
+    <div class="button-row">
+      <button type="submit" id="btn-save-memory" class="btn btn-primary">{% if is_edit %}Save changes{% else %}Save memory{% endif %}</button>
+      <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

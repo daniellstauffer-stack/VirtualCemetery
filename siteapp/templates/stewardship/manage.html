@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Memorial Stewards{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Memorial Stewards</strong> — “The person who manages my memorial.” Grants <strong>no legal authority</strong> over your estate.</div>
+  <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary btn-sm">Back to My Plan</a>
+</div>
+
+<h1>Who can care for my memorial later</h1>
+<p class="lead">
+  Invite a trusted primary steward (and an optional backup). While you are alive, a steward cannot read your private wishes or unpublished memories. Revoking a steward ends their access immediately.
+</p>
+
+{% if incoming_invites %}
+<div class="card card-memorial">
+  <h2>Pending steward invitations sent to you</h2>
+  {% for inv in incoming_invites %}
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border-stone);">
+      <div>
+        <strong>{{ inv.owner.full_display_name }}</strong> invited you as their <strong>{{ inv.get_role_display }}</strong>.
+        <div class="muted">Expires {{ inv.expires_at|date:"F j, Y" }}</div>
+      </div>
+      <a href="{% url 'stewardship:respond_invite' token=inv.invite_token %}" class="btn btn-primary btn-sm">Review &amp; respond</a>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if my_stewardships %}
+<div class="card card-private">
+  <h2>People who trusted you as their memorial steward</h2>
+  {% for st in my_stewardships %}
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border-stone);">
+      <div>
+        <strong>{{ st.owner.full_display_name }}</strong> — {{ st.get_role_display }}
+        {% if st.can_organize_funeral %}<span class="tag tag-memorial">Also Funeral Organizer</span>{% endif %}
+      </div>
+      <a href="{% url 'stewardship:workspace' owner_person_id=st.owner.person_id %}" class="btn btn-primary btn-sm">Open steward workspace</a>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="split-layout">
+  <div class="card">
+    <h2>Your designated stewards</h2>
+    {% if assignments %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Person</th><th>Role</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for a in assignments %}
+              <tr>
+                <td>
+                  <strong>{{ a.invitee_name }}</strong>
+                  <div class="muted">{{ a.invitee_email }}</div>
+                  {% if a.can_organize_funeral %}<span class="tag tag-memorial">Funeral Organizer</span>{% endif %}
+                </td>
+                <td>{{ a.get_role_display }}</td>
+                <td>
+                  <span class="tag {% if a.status == 'accepted' %}tag-private{% elif a.status == 'invited' %}tag-warn{% else %}tag-neutral{% endif %}">
+                    {{ a.get_status_display }}
+                  </span>
+                  {% if a.status == 'invited' %}
+                    <div class="muted" style="font-size:0.82rem;">Expires {{ a.expires_at|date:"M j, Y" }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if a.status == 'invited' or a.status == 'accepted' %}
+                    <form method="post" action="{% url 'stewardship:revoke' assignment_id=a.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger btn-sm">Revoke immediately</button>
+                    </form>
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">You have not invited a memorial steward yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Invite a primary or backup steward</h2>
+    <p class="muted">Invitations expire after 14 days and can only be accepted through a verified account matching their email address.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-field">
+          {% if field.field.widget.input_type == 'checkbox' %}
+            <label class="checkbox-inline" for="{{ field.id_for_label }}">
+              {{ field }} <span><strong>{{ field.label }}</strong></span>
+            </label>
+          {% else %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+          {% endif %}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit" id="btn-invite-steward" class="btn btn-primary">Send steward invitation</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

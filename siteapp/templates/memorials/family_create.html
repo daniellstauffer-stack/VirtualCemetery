@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Create a Family Memorial{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">For a loved one who passed away without an account</span>
+  <h1>Create a family-managed memorial</h1>
+  <p class="muted">
+    This separate flow clearly labels who created the page and checks for duplicates. It gives no access to any other person’s private Virtual Cemetery account or social media accounts.
+  </p>
+
+  {% if possible_duplicates %}
+    <div class="alert alert-warning">
+      <strong>Possible duplicate memorial found:</strong>
+      <ul>
+        {% for dup in possible_duplicates %}
+          <li>{{ dup.full_name }} ({{ dup.life_dates_display }})</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    {% if possible_duplicates %}
+      <div class="form-field">
+        <label class="checkbox-inline">
+          <input type="checkbox" name="confirm_not_duplicate" value="yes" required>
+          <span>I confirm this is a different person and not a duplicate page.</span>
+        </label>
+      </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Create family memorial</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Memorial Invitation Expired{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>This private memorial invitation is no longer valid</h1>
+  <p class="muted">The invitation link has expired or was revoked. Please contact the memorial steward to request a new invitation.</p>
+  <a href="{% url 'home' %}" class="btn btn-secondary">Return home</a>
+</div>
+{% endblock %}

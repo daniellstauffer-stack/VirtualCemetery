@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Public Memorials (Opt-In Only){% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--memorial">
+  <div><strong>Public Memorial Directory</strong> — Only memorials whose owners or authorized families explicitly opted into public search appear here.</div>
+  {% if user.is_authenticated %}
+    <a href="{% url 'memorials:family_create' %}" class="btn btn-secondary btn-sm">Create memorial for loved one without an account</a>
+  {% endif %}
+</div>
+
+<h1>Remembering loved ones</h1>
+<p class="lead">
+  Invited-only memorials and private plans are never indexed or searchable. Use the search below to find an opt-in public memorial by name or story.
+</p>
+
+<form method="get" class="card" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+  <div style="flex:1;min-width:240px;">
+    <label for="id-memorial-search">Search public memorials</label>
+    <input type="text" id="id-memorial-search" name="q" value="{{ query }}" placeholder="Enter a name or keyword...">
+  </div>
+  <button type="submit" id="btn-memorial-search" class="btn btn-primary">Search</button>
+  {% if query %}
+    <a href="{% url 'memorials:discover' %}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
+
+{% if page_obj.object_list %}
+  <div class="grid-3">
+    {% for mem in page_obj %}
+      <article class="memory-card">
+        <div class="memory-card-media">
+          {% if mem.portrait_storage_path %}
+            <img src="{% url 'memorials:portrait_image' slug=mem.slug %}" alt="{{ mem.portrait_alt_text }}">
+          {% elif mem.portrait_static_asset %}
+            <img src="{% static 'images/' %}{{ mem.portrait_static_asset }}" alt="{{ mem.portrait_alt_text }}">
+          {% else %}
+            <img src="{% static 'images/hero-garden.jpg' %}" alt="Quiet sunlit garden path.">
+          {% endif %}
+        </div>
+        <div class="memory-card-body">
+          <span class="muted">{{ mem.life_dates_display }}</span>
+          <h2 style="font-size:1.35rem;margin-top:0.2rem;">{{ mem.full_name }}</h2>
+          {% if mem.is_family_created %}
+            <span class="tag tag-neutral" style="margin-bottom:0.5rem;">{{ mem.created_by_label }}</span>
+          {% endif %}
+          <p class="muted" style="flex:1;">{{ mem.biography|truncatewords:25 }}</p>
+          <a href="{% url 'memorials:detail' slug=mem.slug %}" class="btn btn-secondary btn-sm">Visit memorial</a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Pagination" class="button-row" style="margin-top:1.5rem;justify-content:center;">
+      {% if page_obj.has_previous %}
+        <a href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">Previous</a>
+      {% endif %}
+      <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="card">
+    <p class="muted" style="margin:0;">No opt-in public memorials matched your search. Remember: invited-only memorials require a direct invitation link from the family.</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Report an Issue — {{ memorial.full_name }}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Report abuse or request photo removal</h1>
+  <p class="muted">Reporting on memorial for <strong>{{ memorial.full_name }}</strong>.</p>
+  <form method="post">
+    {% csrf_token %}
+    {% if entry %}<input type="hidden" name="entry_id" value="{{ entry.id }}">{% endif %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="button-row">
+      <button type="submit" class="btn btn-danger">Submit report</button>
+      <a href="{% url 'memorials:detail' slug=memorial.slug %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

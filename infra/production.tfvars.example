@@ -1,0 +1,13 @@
+# Copy to `production.tfvars` (gitignored) and replace placeholder values before running Terraform.
+project_id              = "your-vc-production-gcp-project-id"
+region                  = "us-west1"
+environment             = "production"
+github_repository       = "daniellstauffer-stack/VirtualCemetery"
+site_base_url           = "https://www.example-virtualcemetery.org"
+db_tier                 = "db-custom-1-3840"
+db_high_availability    = false
+web_max_instances       = 10
+worker_max_instances    = 5
+evidence_retention_days = 90
+billing_account_id      = "012345-6789AB-CDEF01"
+monthly_budget_usd      = 150

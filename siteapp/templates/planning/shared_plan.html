@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Shared Funeral Instructions — {{ owner.full_display_name }}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Shared Private Planning Section</strong> — Released to you by explicit grant from {{ owner.full_display_name }}.</div>
+  <a href="{% url 'accounts:grants' %}" class="btn btn-secondary btn-sm">My Access Grants</a>
+</div>
+
+<h1>Instructions shared by {{ owner.full_display_name }}</h1>
+<p class="muted">You can see only the exact sections explicitly granted to you under their timing rules.</p>
+
+{% if 'burial_wishes' in scopes %}
+  <div class="card">
+    <h2>Burial or cremation preferences</h2>
+    <p><strong>Preference:</strong> {{ plan.get_disposition_preference_display }}</p>
+    <p>{{ plan.disposition_notes|default:"No additional notes."|linebreaksbr }}</p>
+  </div>
+{% endif %}
+
+{% if 'funeral_instructions' in scopes %}
+  <div class="card">
+    <h2>Funeral &amp; service instructions</h2>
+    <p>{{ plan.service_wishes|default:"No service wishes recorded yet."|linebreaksbr }}</p>
+  </div>
+{% endif %}
+
+{% if 'document_locations' in scopes %}
+  <div class="card">
+    <h2>Location of important papers</h2>
+    <p>{{ plan.important_document_locations|default:"Not recorded."|linebreaksbr }}</p>
+  </div>
+{% endif %}
+
+{% if 'contact_list' in scopes %}
+  <div class="card">
+    <h2>Private funeral contact list</h2>
+    {% if contacts %}
+      <ul>
+        {% for c in contacts %}
+          <li><strong>{{ c.full_name }}</strong> — {{ c.email }}{% if c.relationship %} ({{ c.relationship }}){% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No contacts listed.</p>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

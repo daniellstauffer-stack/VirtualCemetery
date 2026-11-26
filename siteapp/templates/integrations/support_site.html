@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Support Virtual Cemetery (Optional){% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">Voluntary site support · Hosted checkout</span>
+  <h1>Support Virtual Cemetery</h1>
+
+  {% if thanks %}
+    <div class="alert alert-success">Thank you for your voluntary contribution toward hosting and preserving family memorials.</div>
+  {% endif %}
+  {% if checkout_feedback %}
+    <div class="alert alert-info">{{ checkout_feedback }}</div>
+  {% endif %}
+
+  <p class="lead">
+    Virtual Cemetery is free for pilot families. If you wish, you may make an optional one-time contribution to help cover database backups, private photo storage, and human verification support.
+  </p>
+
+  <div class="alert alert-info">
+    <strong>Clear disclosures before you contribute:</strong>
+    <ul style="margin:0.45rem 0 0;padding-left:1.2rem;">
+      <li><strong>No impact on access:</strong> Contributing has zero bearing on memorial access, visibility, or support priority.</li>
+      <li><strong>Payee:</strong> {{ payee_name }}</li>
+      <li><strong>Currency:</strong> {{ currency }} (processed securely via Stripe Hosted Checkout; we never handle card numbers)</li>
+      <li><strong>Refunds &amp; questions:</strong> Email <a href="mailto:{{ refund_contact }}">{{ refund_contact }}</a> within 30 days for a full refund.</li>
+      <li><strong>Tax status:</strong> {{ tax_status }}</li>
+    </ul>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-field">
+      <label for="id-amount">One-time contribution amount ({{ currency }})</label>
+      <input type="number" id="id-amount" name="amount_dollars" value="25" min="1" max="5000" step="1" required>
+    </div>
+    <button type="submit" id="btn-contribute" class="btn btn-primary">
+      {% if stripe_enabled %}Continue to Stripe Checkout{% else %}Preview contribution (Stripe placeholder mode){% endif %}
+    </button>
+  </form>
+</div>
+{% endblock %}

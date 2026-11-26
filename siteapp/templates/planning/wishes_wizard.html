@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}“Draft My Wishes” Worksheet{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Private Preparation Worksheet</strong> — Last saved {{ worksheet.updated_at|date:"F j, Y" }}</div>
+  <div class="button-row">
+    <a href="{% url 'planning:download_worksheet' %}" id="btn-download-worksheet" class="btn btn-secondary btn-sm">Download Printable Worksheet</a>
+    <a href="{% url 'integrations:directory' %}?category=estate_lawyer" class="btn btn-secondary btn-sm">Find Local Estate Counsel</a>
+  </div>
+</div>
+
+<h1>“Draft my wishes” preparation worksheet</h1>
+
+<div class="alert alert-warning" role="note">
+  <strong>Important legal notice:</strong> This worksheet is a private preparation guide to bring to an appointment with a qualified estate-planning attorney. <strong>It is NOT a legal will</strong> and does not execute or replace a valid will under {{ worksheet.jurisdiction }} law. Do NOT enter account passwords, Social Security numbers, or full financial account numbers.
+</div>
+
+<div class="card">
+  <p class="muted">You may skip any section, save your progress at any time, return later, and download a dated private copy.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="button-row">
+      <button type="submit" id="btn-save-worksheet" class="btn btn-primary">Save worksheet</button>
+      <a href="{% url 'planning:download_worksheet' %}" class="btn btn-secondary">Download dated copy</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

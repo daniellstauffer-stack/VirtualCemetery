@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Create Your Account{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">Invitation-only family pilot · {{ PILOT_JURISDICTION }}</span>
+  <h1>Start your private plan</h1>
+  <p class="muted">
+    Your account gives you a private planning space (<strong>My Plan</strong>). Nothing you save is ever shared publicly unless you explicitly choose it.
+  </p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="button-row">
+      <button type="submit" id="btn-register-submit" class="btn btn-primary">Create My Account</button>
+      <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Already have an account? Sign in</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Print Memorial — {{ memorial.full_name }}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="no-print" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+  <a href="{% url 'memorials:detail' slug=memorial.slug %}" class="btn btn-secondary btn-sm">Back to memorial</a>
+  <button type="button" onclick="window.print()" class="btn btn-primary btn-sm">Print this page</button>
+</div>
+
+<article class="card">
+  <h1>{{ memorial.full_name }}</h1>
+  {% if memorial.life_dates_display %}<p class="muted">{{ memorial.life_dates_display }}</p>{% endif %}
+  <p>{{ memorial.biography|linebreaksbr }}</p>
+  {% if memorial.steward_tribute %}
+    <blockquote style="border-left:3px solid var(--accent-ochre);padding-left:1rem;margin:1.25rem 0;font-style:italic;">
+      {{ memorial.steward_tribute|linebreaksbr }}
+      <footer>— {{ memorial.steward_tribute_author }}</footer>
+    </blockquote>
+  {% endif %}
+
+  {% if memories %}
+    <h2>Remembered stories</h2>
+    {% for m in memories %}
+      <div style="margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border-stone);">
+        <h3>{{ m.title }}{% if m.year_taken %} ({{ m.year_taken }}){% endif %}</h3>
+        <p>{{ m.story|linebreaksbr }}</p>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if entries %}
+    <h2>Guestbook notes</h2>
+    {% for e in entries %}
+      <p><strong>{{ e.author_display_name }}</strong>: {{ e.message }}</p>
+    {% endfor %}
+  {% endif %}
+</article>
+{% endblock %}

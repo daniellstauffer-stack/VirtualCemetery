@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Steward Invitation from {{ assignment.owner.full_display_name }}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">Steward invitation</span>
+  <h1>{{ assignment.owner.full_display_name }} invited you to manage their memorial</h1>
+  <p>
+    Role: <strong>{{ assignment.get_role_display }}</strong>
+    {% if assignment.can_organize_funeral %} and <strong>Funeral Organizer</strong>{% endif %}.
+  </p>
+
+  <div class="alert alert-info">
+    <strong>What this role allows—and what it does not:</strong>
+    <ul style="margin:0.5rem 0 0;padding-left:1.2rem;">
+      <li>While {{ assignment.owner.full_display_name }} is alive, you <strong>cannot</strong> read their private wishes, private memories, or funeral guest list unless they separately grant you access.</li>
+      <li>After a staff-verified death, you may assemble and publish their memorial within the audience ceiling they chose, moderate guestbook tributes, and invite viewers.</li>
+      <li>This role grants <strong>no legal authority</strong> over their estate, finances, or social media accounts.</li>
+      <li>They can revoke or replace this designation at any time.</li>
+    </ul>
+  </div>
+
+  {% if not email_matches %}
+    <div class="alert alert-danger">
+      This invitation was issued to <strong>{{ assignment.invitee_email }}</strong>, but you are signed in as <strong>{{ user.email }}</strong>. Please sign in with the invited email account.
+    </div>
+  {% elif not user.email_verified %}
+    <div class="alert alert-warning">
+      Please <a href="{% url 'accounts:profile' %}">verify your email address</a> before accepting this invitation.
+    </div>
+  {% else %}
+    <form method="post" class="button-row">
+      {% csrf_token %}
+      <button type="submit" name="decision" value="accept" id="btn-accept-steward" class="btn btn-primary">Accept steward role</button>
+      <button type="submit" name="decision" value="decline" id="btn-decline-steward" class="btn btn-secondary">Decline</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

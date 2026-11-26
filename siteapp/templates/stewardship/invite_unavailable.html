@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Invitation Unavailable{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>This steward invitation is no longer active</h1>
+  <p class="muted">
+    It may have expired, already been accepted or declined, or been revoked by the account owner.
+  </p>
+  <a href="{% url 'stewardship:manage' %}" class="btn btn-secondary">Return to Stewards</a>
+</div>
+{% endblock %}

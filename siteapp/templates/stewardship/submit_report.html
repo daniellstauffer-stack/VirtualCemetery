@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Submit a Death Report — {{ owner.full_display_name }}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Private Death Report</strong> for {{ owner.full_display_name }}</div>
+  <a href="{% url 'stewardship:workspace' owner_person_id=owner.person_id %}" class="btn btn-secondary btn-sm">Back to workspace</a>
+</div>
+
+<div class="card">
+  <h1>Submit a private death report</h1>
+  <div class="alert alert-info">
+    <strong>What happens next:</strong> Submitting this report opens a confidential case for a trained staff reviewer. It <strong>never sends funeral invitations</strong> and <strong>never changes any public page</strong>. Our reviewer will check independent evidence and attempt to reach the account owner directly before taking action. Supporting files are stored privately and permanently deleted after 90 days.
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="button-row">
+      <button type="submit" id="btn-file-report" class="btn btn-warm">Submit private report for review</button>
+      <a href="{% url 'stewardship:workspace' owner_person_id=owner.person_id %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

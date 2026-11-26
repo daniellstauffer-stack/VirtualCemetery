@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Service Integrations &amp; Placeholders{% endblock %}
+
+{% block content %}
+<span class="eyebrow">Operations &amp; Environment Setup</span>
+<h1>External services &amp; configuration placeholders</h1>
+<p class="lead">
+  Overview of connected Google Cloud, email, social, directory, and payment adapters. See <code>.env.example</code> and <code>docs/configuration-guide.md</code> for setup instructions.
+</p>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Service</th><th>Status</th><th>Environment variables</th><th>Current behavior</th></tr></thead>
+      <tbody>
+        {% for s in services %}
+          <tr>
+            <td><strong>{{ s.name }}</strong></td>
+            <td>
+              {% if s.configured %}
+                <span class="tag tag-private">Configured</span>
+              {% else %}
+                <span class="tag tag-warn">Placeholder / Local mode</span>
+              {% endif %}
+            </td>
+            <td><code>{{ s.env_keys }}</code></td>
+            <td class="muted">{{ s.notes }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

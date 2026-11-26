@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>My Virtual Cemetery Plan Archive — {{ owner.full_display_name }}</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 780px; margin: 2rem auto; line-height: 1.65; color: #222; padding: 0 1rem; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; margin-top: 1.75rem; }
+    .item { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>My Plan — Readable Archive</h1>
+  <p><strong>Account owner:</strong> {{ owner.full_display_name }} ({{ owner.email }})<br>
+     <strong>Stable Person ID:</strong> {{ owner.person_id }}<br>
+     <strong>Exported on:</strong> {{ generated_at|date:"F j, Y · g:i A T" }}</p>
+
+  <h2>Memorial Preferences</h2>
+  <p><strong>Preferred Name:</strong> {{ plan.display_memorial_name }}</p>
+  <p><strong>Audience Ceiling:</strong> {{ plan.get_memorial_audience_ceiling_display }}</p>
+  <p><strong>Life Story Draft:</strong><br>{{ plan.biography_draft|linebreaksbr }}</p>
+
+  <h2>Private End-of-Life Wishes</h2>
+  <p><strong>Burial/Cremation Preference:</strong> {{ plan.get_disposition_preference_display }}</p>
+  <p>{{ plan.disposition_notes|linebreaksbr }}</p>
+  <p><strong>Service Wishes:</strong><br>{{ plan.service_wishes|linebreaksbr }}</p>
+  <p><strong>Emergency Contacts:</strong><br>{{ plan.emergency_contacts|linebreaksbr }}</p>
+  <p><strong>Important Document Locations:</strong><br>{{ plan.important_document_locations|linebreaksbr }}</p>
+
+  <h2>Saved Memories ({{ memories|length }})</h2>
+  {% for m in memories %}
+    <div class="item">
+      <h3>{{ m.title }}{% if m.year_taken %} ({{ m.year_taken }}){% endif %}</h3>
+      <p><em>Audience setting:</em> {{ m.get_audience_display }}</p>
+      <p>{{ m.story|linebreaksbr }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>

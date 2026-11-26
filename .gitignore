@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment & Secrets — NEVER commit real credentials or family records
+.env
+.env.local
+.env.*.local
+*.tfvars
+!infra/*.tfvars.example
+*-credentials.json
+service-account*.json
+
+# Local databases & runtime media (keep real family records out of GitHub)
+db.sqlite3
+db.sqlite3-*
+local_media/
+local_evidence/
+staticfiles/
+
+# Terraform state
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/.terraform.lock.hcl
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

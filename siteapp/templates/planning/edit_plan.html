@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Edit My Plan{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Editing My Plan (Private)</strong> — Saving changes here never publishes anything automatically.</div>
+  <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary btn-sm">Back to My Plan</a>
+</div>
+
+<div class="card">
+  <h1>Edit your wishes &amp; memorial defaults</h1>
+  <p class="muted">Avoid storing account passwords or full financial account numbers here; record only where physical documents are kept and who to contact.</p>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+    {% for field in form %}
+      <div class="form-field">
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <label class="checkbox-inline" for="{{ field.id_for_label }}">
+            {{ field }} <span><strong>{{ field.label }}</strong>{% if field.help_text %}<br><span class="helptext" style="margin-top:0.1rem;">{{ field.help_text }}</span>{% endif %}</span>
+          </label>
+        {% else %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+        {% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+
+    <div class="button-row">
+      <button type="submit" id="btn-save-plan" class="btn btn-primary">Save private plan</button>
+      <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

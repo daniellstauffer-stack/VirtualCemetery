@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Staff Verification Desk{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--staff">
+  <div><strong>Restricted Staff Verification Desk</strong> — MFA verified · All case views and decisions are logged.</div>
+  <span class="tag tag-warn">Reviewer: {{ user.full_display_name }}</span>
+</div>
+
+<h1>Verification &amp; dispute review queue</h1>
+<p class="lead">
+  Access to raw case evidence is restricted to assigned staff reviewers. Remember: silence alone is insufficient for approval, and any conflicting claim must be paused for a second reviewer.
+</p>
+
+{% if open_disputes %}
+<div class="card" style="border-left:4px solid var(--status-danger);">
+  <h2>Urgent open disputes &amp; appeals ({{ open_disputes|length }})</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Claimant</th><th>Relationship</th><th>Details</th><th>Case</th></tr></thead>
+      <tbody>
+        {% for d in open_disputes %}
+          <tr>
+            <td><strong>{{ d.subject_email_or_name }}</strong></td>
+            <td>{{ d.claimant_name }}<div class="muted">{{ d.claimant_email }}</div></td>
+            <td>{{ d.claimant_relationship }}</td>
+            <td>{{ d.details|truncatewords:30 }}</td>
+            <td>
+              {% if d.related_report %}
+                <a href="{% url 'stewardship:staff_case' report_id=d.related_report.id %}" class="btn btn-danger btn-sm">Open case</a>
+              {% else %}
+                <span class="muted">Unlinked</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Pending verification cases ({{ pending_reports|length }})</h2>
+  {% if pending_reports %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Case ID</th><th>Account Owner</th><th>Submitted</th><th>Status</th><th>Assigned</th><th></th></tr></thead>
+        <tbody>
+          {% for r in pending_reports %}
+            <tr>
+              <td><code>{{ r.id|stringformat:"s"|slice:":8" }}</code></td>
+              <td><strong>{{ r.subject_owner.full_display_name }}</strong><div class="muted">{{ r.subject_owner.email }}</div></td>
+              <td>{{ r.created_at|date:"M j, Y" }}</td>
+              <td><span class="tag {% if r.status == 'conflict_paused' %}tag-danger{% else %}tag-warn{% endif %}">{{ r.get_status_display }}</span></td>
+              <td>{{ r.assigned_reviewer.full_display_name|default:"Unassigned" }}</td>
+              <td><a href="{% url 'stewardship:staff_case' report_id=r.id %}" class="btn btn-primary btn-sm">Review case</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">No pending death-verification cases right now.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Recently decided or reversed cases</h2>
+  {% if closed_reports %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Case ID</th><th>Account Owner</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+        <tbody>
+          {% for r in closed_reports %}
+            <tr>
+              <td><code>{{ r.id|stringformat:"s"|slice:":8" }}</code></td>
+              <td>{{ r.subject_owner.full_display_name }}</td>
+              <td><span class="tag tag-neutral">{{ r.get_status_display }}</span></td>
+              <td>{{ r.updated_at|date:"M j, Y · g:i A" }}</td>
+              <td><a href="{% url 'stewardship:staff_case' report_id=r.id %}" class="btn btn-secondary btn-sm">View / Reverse</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">No closed cases yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

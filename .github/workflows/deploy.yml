@@ -1,0 +1,114 @@
+name: Build, Rehearse (Staging) & Promote (Production)
+
+# Follows docs/architecture-and-deployment.md:
+# 1. Authenticate to Google Cloud via keyless Workload Identity Federation.
+# 2. Build ONE container image and pin it by immutable @sha256 digest.
+# 3. Run compatible database migrations as a Cloud Run Job, then deploy Staging.
+# 4. Promote the exact same tested digest to Production after manual approval.
+#
+# Configure these GitHub Repository Variables / Secrets before enabling:
+#   Vars: GCP_REGION, GCP_STAGING_PROJECT_ID, GCP_PROD_PROJECT_ID
+#   Secrets: GCP_STAGING_WIF_PROVIDER, GCP_STAGING_DEPLOYER_SA,
+#            GCP_PROD_WIF_PROVIDER, GCP_PROD_DEPLOYER_SA
+
+on:
+  workflow_dispatch:
+    inputs:
+      promote_to_production:
+        description: "Promote tested image to production (requires environment approval)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy-staging:
+    name: Build Image & Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    outputs:
+      image_digest: ${{ steps.build.outputs.image_digest }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (Staging WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_STAGING_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_STAGING_DEPLOYER_SA }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ vars.GCP_REGION || 'us-west1' }}-docker.pkg.dev" --quiet
+
+      - name: Build & push image pinned by digest
+        id: build
+        run: |
+          REGION="${{ vars.GCP_REGION || 'us-west1' }}"
+          PROJECT="${{ vars.GCP_STAGING_PROJECT_ID }}"
+          REPO="${REGION}-docker.pkg.dev/${PROJECT}/virtual-cemetery/app"
+          TAG="${GITHUB_SHA::12}"
+          docker build -t "${REPO}:${TAG}" .
+          docker push "${REPO}:${TAG}"
+          DIGEST=$(gcloud artifacts docker images describe "${REPO}:${TAG}" --format='value(image_summary.digest)')
+          echo "image_digest=${REPO}@${DIGEST}" >> "$GITHUB_OUTPUT"
+
+      - name: Run database migrations (Staging Cloud Run Job)
+        run: |
+          REGION="${{ vars.GCP_REGION || 'us-west1' }}"
+          gcloud run jobs update vc-staging-migrate \
+            --region="${REGION}" \
+            --image="${{ steps.build.outputs.image_digest }}"
+          gcloud run jobs execute vc-staging-migrate --region="${REGION}" --wait
+
+      - name: Deploy Staging Web & Private Worker
+        run: |
+          REGION="${{ vars.GCP_REGION || 'us-west1' }}"
+          gcloud run services update vc-staging-web \
+            --region="${REGION}" \
+            --image="${{ steps.build.outputs.image_digest }}"
+          gcloud run services update vc-staging-worker \
+            --region="${REGION}" \
+            --image="${{ steps.build.outputs.image_digest }}"
+
+  promote-production:
+    name: Promote Tested Digest to Production
+    needs: build-and-deploy-staging
+    if: ${{ inputs.promote_to_production == true }}
+    runs-on: ubuntu-latest
+    environment: production  # Configure Required Reviewers in GitHub Settings -> Environments
+
+    steps:
+      - name: Authenticate to Google Cloud (Production WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_PROD_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_PROD_DEPLOYER_SA }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Apply compatible migrations (Production Cloud Run Job)
+        run: |
+          REGION="${{ vars.GCP_REGION || 'us-west1' }}"
+          gcloud run jobs update vc-production-migrate \
+            --region="${REGION}" \
+            --image="${{ needs.build-and-deploy-staging.outputs.image_digest }}"
+          gcloud run jobs execute vc-production-migrate --region="${REGION}" --wait
+
+      - name: Promote exact tested image to Production (gradual rollout)
+        run: |
+          REGION="${{ vars.GCP_REGION || 'us-west1' }}"
+          gcloud run services update vc-production-worker \
+            --region="${REGION}" \
+            --image="${{ needs.build-and-deploy-staging.outputs.image_digest }}"
+          gcloud run services update vc-production-web \
+            --region="${REGION}" \
+            --image="${{ needs.build-and-deploy-staging.outputs.image_digest }}" \
+            --no-traffic
+          echo "New revision staged with 0% traffic. Shift traffic gradually after smoke checks."

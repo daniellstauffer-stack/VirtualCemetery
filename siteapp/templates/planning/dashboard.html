@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Plan (Private Workspace){% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div>
+    <span class="tag tag-private">Private Workspace · Visible Only to You</span>
+    <span style="margin-left:0.5rem;">Last updated {{ plan.updated_at|date:"F j, Y · g:i A" }}</span>
+  </div>
+  <div class="button-row">
+    <a href="{% url 'memorials:owner_preview' %}" id="btn-preview-memorial" class="btn btn-warm btn-sm">Preview My Memorial</a>
+    <a href="{% url 'planning:export_archive' %}" id="btn-export-archive" class="btn btn-secondary btn-sm">Download My Archive (ZIP)</a>
+  </div>
+</div>
+
+<h1>My Plan</h1>
+<p class="lead">
+  Everything on this page is private while you are alive. Choose which memories may appear on your memorial later, name someone you trust to care for it, and keep funeral wishes separate.
+</p>
+
+{% if steward_for %}
+<div class="alert alert-info">
+  <strong>You are a designated memorial steward for:</strong>
+  {% for st in steward_for %}
+    <a href="{% url 'stewardship:workspace' owner_person_id=st.owner.person_id %}" style="margin-left:0.5rem;font-weight:700;">{{ st.owner.full_display_name }} ({{ st.get_role_display }})</a>{% if not forloop.last %} · {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if incoming_grants %}
+<div class="alert alert-info">
+  <strong>Private instructions shared with you:</strong>
+  {% for g in incoming_grants %}
+    <a href="{% url 'planning:shared_plan' owner_person_id=g.owner.person_id %}" style="margin-left:0.5rem;font-weight:700;">{{ g.owner.full_display_name }} — {{ g.get_scope_display }}</a>{% if not forloop.last %} · {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="split-layout">
+  <div>
+    <section class="card card-private" aria-labelledby="wishes-heading">
+      <div class="card-header">
+        <div>
+          <span class="tag tag-private">Private Wishes</span>
+          <h2 id="wishes-heading" style="margin-top:0.45rem;margin-bottom:0;">Preferences &amp; important details</h2>
+        </div>
+        <a href="{% url 'planning:edit_plan' %}" id="btn-edit-plan" class="btn btn-primary btn-sm">Edit My Plan</a>
+      </div>
+
+      <dl style="margin:0;">
+        <dt style="font-weight:700;">Preferred memorial name</dt>
+        <dd style="margin:0 0 0.9rem 0;">{{ plan.display_memorial_name }}{% if plan.birth_year %} (Born {{ plan.birth_year }}){% endif %}</dd>
+
+        <dt style="font-weight:700;">Burial or cremation preference</dt>
+        <dd style="margin:0 0 0.9rem 0;">
+          {{ plan.get_disposition_preference_display }}
+          {% if plan.disposition_notes %}<div class="muted">{{ plan.disposition_notes }}</div>{% endif %}
+        </dd>
+
+        <dt style="font-weight:700;">Service &amp; gathering wishes</dt>
+        <dd style="margin:0 0 0.9rem 0;">{{ plan.service_wishes|default:"Not recorded yet."|linebreaksbr }}</dd>
+
+        <dt style="font-weight:700;">Emergency contacts to notify first</dt>
+        <dd style="margin:0 0 0.9rem 0;">{{ plan.emergency_contacts|default:"Not recorded yet."|linebreaksbr }}</dd>
+
+        <dt style="font-weight:700;">Where important papers are kept</dt>
+        <dd style="margin:0 0 0.9rem 0;">{{ plan.important_document_locations|default:"Not recorded yet."|linebreaksbr }}</dd>
+
+        <dt style="font-weight:700;">Audience ceiling for your future memorial</dt>
+        <dd style="margin:0;">
+          <span class="tag tag-memorial">{{ plan.get_memorial_audience_ceiling_display }}</span>
+          {% if plan.allow_site_search %}
+            <span class="tag tag-neutral">Included in site search</span>
+          {% else %}
+            <span class="tag tag-private">Hidden from site search</span>
+          {% endif %}
+        </dd>
+      </dl>
+    </section>
+
+    <section class="card" aria-labelledby="memories-heading">
+      <div class="card-header">
+        <div>
+          <h2 id="memories-heading" style="margin-bottom:0.2rem;">My memories &amp; photographs</h2>
+          <p class="muted" style="margin:0;">Every item clearly states who will be able to see it.</p>
+        </div>
+        <div class="button-row">
+          <a href="{% url 'planning:add_memory' %}" id="btn-add-memory" class="btn btn-primary btn-sm">Add a memory</a>
+          <a href="{% url 'integrations:facebook_import' %}" class="btn btn-secondary btn-sm">Import from Facebook archive</a>
+        </div>
+      </div>
+
+      {% if memories %}
+        <div class="grid-2">
+          {% for mem in memories %}
+            <article class="memory-card">
+              {% if mem.photo_display or mem.photo_original %}
+                <div class="memory-card-media">
+                  <img src="{% url 'planning:memory_image' memory_id=mem.id %}" alt="{{ mem.alt_text }}">
+                </div>
+              {% elif mem.static_sample_image %}
+                <div class="memory-card-media">
+                  <img src="{% static 'images/' %}{{ mem.static_sample_image }}" alt="{{ mem.alt_text }}">
+                </div>
+              {% endif %}
+              <div class="memory-card-body">
+                <div style="margin-bottom:0.5rem;">
+                  {% if mem.audience == 'private_only' %}
+                    <span class="tag tag-private">Only me (stays private)</span>
+                  {% elif mem.audience == 'steward_after_death' %}
+                    <span class="tag tag-warn">Steward only after death</span>
+                  {% else %}
+                    <span class="tag tag-memorial">{{ mem.get_audience_display }}</span>
+                  {% endif %}
+                </div>
+                <h3>{{ mem.title }}{% if mem.year_taken %} <span class="muted">({{ mem.year_taken }})</span>{% endif %}</h3>
+                <p class="muted" style="flex:1;">{{ mem.story|truncatewords:30 }}</p>
+                <p style="font-size:0.84rem;color:var(--ink-secondary);margin-bottom:0.75rem;">
+                  {{ mem.audience_plain_summary }}
+                </p>
+                <div class="button-row">
+                  <a href="{% url 'planning:edit_memory' memory_id=mem.id %}" class="btn btn-secondary btn-sm">Edit / Audience</a>
+                  <form method="post" action="{% url 'planning:delete_memory' memory_id=mem.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary btn-sm">Delete</button>
+                  </form>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">You haven't added any photographs or stories yet. Start by adding one favorite photograph and telling the story behind it.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside aria-label="Planning tools and permissions">
+    <div class="card">
+      <h2>Who manages my memorial</h2>
+      <p class="muted">A memorial steward cares for your memorial after a verified death within your choices. This role grants <strong>no legal authority</strong> over your estate.</p>
+      {% if stewards %}
+        <ul style="padding-left:1.1rem;">
+          {% for s in stewards %}
+            <li style="margin-bottom:0.5rem;">
+              <strong>{{ s.invitee_name }}</strong> — {{ s.get_role_display }}
+              <div><span class="tag {% if s.status == 'accepted' %}tag-private{% else %}tag-warn{% endif %}">{{ s.get_status_display }}</span></div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No memorial steward designated yet.</p>
+      {% endif %}
+      <a href="{% url 'stewardship:manage' %}" id="btn-manage-stewards" class="btn btn-secondary btn-sm">Choose or manage stewards</a>
+    </div>
+
+    <div class="card">
+      <h2>Named access grants</h2>
+      <p class="muted">Share specific funeral wishes or your guest list with a named person while alive or after verified death.</p>
+      <p><strong>{{ active_grants|length }}</strong> active grant(s).</p>
+      <a href="{% url 'accounts:grants' %}" class="btn btn-secondary btn-sm">Manage grants</a>
+    </div>
+
+    <div class="card">
+      <h2>“Draft my wishes” worksheet</h2>
+      <p class="muted">Organize notes on dependants, guardians, asset categories, and questions to take to an estate-planning attorney. <em>Not a legal will.</em></p>
+      {% if worksheet %}
+        <p class="muted">Last saved {{ worksheet.updated_at|date:"M j, Y" }}.</p>
+      {% endif %}
+      <a href="{% url 'planning:wishes_wizard' %}" id="btn-wishes-wizard" class="btn btn-secondary btn-sm">Open planning worksheet</a>
+    </div>
+
+    <div class="card">
+      <h2>Funeral guest list</h2>
+      <p class="muted">Keep a private list of people to invite to a service. Nothing is ever sent automatically.</p>
+      <div class="button-row">
+        <a href="{% url 'events:contacts' %}" class="btn btn-secondary btn-sm">Open funeral list</a>
+        <a href="{% url 'integrations:contact_import' %}" class="btn btn-secondary btn-sm">Import CSV / vCard</a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Review Case {{ report.id|stringformat:"s"|slice:":8" }}{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--staff">
+  <div><strong>Staff Case Review</strong> · Case <code>{{ report.id }}</code> · Status: <strong>{{ report.get_status_display }}</strong></div>
+  <a href="{% url 'stewardship:staff_desk' %}" class="btn btn-secondary btn-sm">Back to queue</a>
+</div>
+
+<h1>Verification case: {{ report.subject_owner.full_display_name }}</h1>
+
+<div class="split-layout">
+  <div>
+    <div class="card">
+      <h2>Case facts &amp; isolated evidence</h2>
+      <p><strong>Account owner:</strong> {{ report.subject_owner.full_display_name }} ({{ report.subject_owner.email }})</p>
+      <p><strong>Verified secondary contact:</strong> {{ report.subject_owner.verified_phone_hint|default:"None on file" }}</p>
+      <p><strong>Submitted by:</strong> {{ report.submitted_by.full_display_name|default:"Support intake" }} ({{ report.submitter_relationship }})</p>
+      <p><strong>Reported date of death:</strong> {{ report.reported_date_of_death|default:"Not provided" }}</p>
+      <p><strong>Evidence summary:</strong><br>{{ report.evidence_summary|linebreaksbr }}</p>
+      <p>
+        <strong>Evidence file:</strong>
+        {% if report.evidence_purged_at %}
+          <span class="tag tag-neutral">Purged on {{ report.evidence_purged_at|date:"M j, Y" }}</span>
+        {% elif report.evidence_file %}
+          {% if report.assigned_reviewer_id == user.id or report.second_reviewer_id == user.id %}
+            <a href="{% url 'stewardship:staff_evidence' report_id=report.id %}" class="btn btn-secondary btn-sm">Download restricted evidence file</a>
+          {% else %}
+            <span class="muted">Claim/assign this case first to access evidence.</span>
+          {% endif %}
+          <div class="muted">Scheduled auto-purge: {{ report.evidence_scheduled_purge_at|date:"F j, Y" }}</div>
+        {% else %}
+          <span class="muted">No file uploaded.</span>
+        {% endif %}
+      </p>
+    </div>
+
+    {% if report.erroneous_notices_snapshot %}
+    <div class="card" style="border-left:4px solid var(--status-danger);">
+      <h2>Erroneous notices already delivered before reversal</h2>
+      <p class="muted">Delivered emails cannot be recalled; use this recorded list to send prompt corrections.</p>
+      <ul>
+        {% for item in report.erroneous_notices_snapshot %}
+          <li><strong>{{ item.recipient_name }}</strong> ({{ item.recipient_email }}) — sent {{ item.sent_at }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if disputes %}
+    <div class="card" style="border-left:4px solid var(--status-danger);">
+      <h2>Disputes attached to this case</h2>
+      {% for d in disputes %}
+        <p><strong>{{ d.claimant_name }}</strong> ({{ d.claimant_relationship }}, {{ d.claimant_email }}):<br>{{ d.details }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Decision audit log</h2>
+      {% for dec in decisions %}
+        <div style="padding:0.65rem 0;border-bottom:1px solid var(--border-stone);">
+          <strong>{{ dec.get_action_display }}</strong> by {{ dec.reviewer.full_display_name|default:"Staff" }}
+          <span class="muted">· {{ dec.created_at|date:"M j, Y · g:i A" }}</span>
+          <p style="margin:0.35rem 0 0;">{{ dec.reason }}</p>
+        </div>
+      {% empty %}
+        <p class="muted">No decisions recorded yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Verification checklist</h2>
+      <ul style="padding-left:1.1rem;">
+        <li>Assigned reviewer: <strong>{{ report.assigned_reviewer.full_display_name|default:"Unassigned" }}</strong></li>
+        <li>Independent evidence verified: <strong>{% if report.independent_evidence_checked %}Yes{% else %}Not yet{% endif %}</strong></li>
+        <li>Owner challenge outreach sent: <strong>{% if report.owner_challenge_sent_at %}{{ report.owner_challenge_sent_at|date:"M j, Y · g:i A" }}{% else %}Not yet{% endif %}</strong></li>
+      </ul>
+
+      <div class="button-row" style="margin-top:1rem;">
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" name="staff_action" value="assign" class="btn btn-secondary btn-sm">Assign to me</button>
+        </form>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" name="staff_action" value="check_evidence" class="btn btn-secondary btn-sm">Mark evidence verified</button>
+        </form>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" name="staff_action" value="send_challenge" class="btn btn-warm btn-sm">Send owner challenge outreach</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Record formal decision</h2>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-field">
+          <label for="{{ decision_form.reason.id_for_label }}">{{ decision_form.reason.label }}</label>
+          {{ decision_form.reason }}
+          <span class="helptext">{{ decision_form.reason.help_text }}</span>
+        </div>
+        <div class="button-row">
+          {% if report.status != 'approved' and report.status != 'reversed' %}
+            <button type="submit" name="staff_action" value="approve" id="btn-staff-approve" class="btn btn-primary btn-sm">Approve verification</button>
+            <button type="submit" name="staff_action" value="pause_conflict" class="btn btn-warm btn-sm">Pause for 2nd reviewer</button>
+            <button type="submit" name="staff_action" value="reject" class="btn btn-secondary btn-sm">Reject report</button>
+          {% endif %}
+          {% if report.status == 'approved' %}
+            <button type="submit" name="staff_action" value="reverse" id="btn-staff-reverse" class="btn btn-danger btn-sm">Reverse approval &amp; restore owner</button>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

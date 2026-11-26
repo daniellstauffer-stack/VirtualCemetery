@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">Verified email sign-in</span>
+  <h1>Sign in to Virtual Cemetery</h1>
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% for field in form %}
+      <div class="form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="button-row">
+      <button type="submit" id="btn-login-submit" class="btn btn-primary">Sign in</button>
+      <a href="{% url 'accounts:register' %}" class="btn btn-secondary">Create an account</a>
+    </div>
+  </form>
+
+  {% if FACEBOOK_LOGIN_ENABLED %}
+    <hr style="border:0;border-top:1px solid var(--border-stone);margin:1.5rem 0;">
+    <p class="muted">Optional provider sign-in is enabled via Meta/Facebook Login.</p>
+  {% endif %}
+</div>
+
+{% if demo_accounts %}
+<div class="card card-private">
+  <span class="tag tag-private">Local Development Emulator Active</span>
+  <h2 style="margin-top:0.65rem;">Fictional pilot family accounts</h2>
+  <p class="muted">
+    Use these fictional accounts to walk through the three-screen milestone (grandfather Arthur, steward Clara, visitor Elena, and staff reviewer Hannah). Disabled automatically in production.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Role</th><th>Email</th><th>Password</th></tr>
+      </thead>
+      <tbody>
+        {% for label, email, pw in demo_accounts %}
+          <tr>
+            <td><strong>{{ label }}</strong></td>
+            <td><code>{{ email }}</code></td>
+            <td><code>{{ pw }}</code></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" style="margin-top:0.75rem;margin-bottom:0;">
+    Local emulator step-up MFA code (for steward revocation &amp; staff verification desk): <code>482910</code>
+  </p>
+</div>
+{% endif %}
+{% endblock %}

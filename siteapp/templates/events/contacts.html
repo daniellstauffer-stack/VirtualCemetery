@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Private Funeral Guest List{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Private Funeral Contact List</strong> for {{ owner.full_display_name }} — Never searchable, never sent automatically.</div>
+  <div class="button-row">
+    {% if owner.id == user.id %}
+      <a href="{% url 'integrations:contact_import' %}" class="btn btn-secondary btn-sm">Import CSV / vCard</a>
+    {% endif %}
+    <a href="{% url 'events:create_event' owner_person_id=owner.person_id %}" id="btn-new-event" class="btn btn-warm btn-sm">Prepare Funeral Event</a>
+  </div>
+</div>
+
+<h1>Funeral guest list &amp; invitations</h1>
+
+<div class="split-layout">
+  <div>
+    <div class="card">
+      <h2>Saved contacts ({{ contacts|length }})</h2>
+      {% if contacts %}
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Relationship</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              {% for c in contacts %}
+                <tr>
+                  <td><strong>{{ c.full_name }}</strong></td>
+                  <td>{{ c.email }}</td>
+                  <td>{{ c.relationship|default:"—" }}</td>
+                  <td>
+                    {% if c.opted_out %}
+                      <span class="tag tag-danger">Opted out</span>
+                    {% else %}
+                      <span class="tag tag-private">Eligible</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'events:delete_contact' contact_id=c.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-secondary btn-sm">Remove</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">No funeral contacts saved yet. Add someone by hand or import from a CSV/vCard file.</p>
+      {% endif %}
+    </div>
+
+    {% if events %}
+      <div class="card">
+        <h2>Funeral events</h2>
+        {% for ev in events %}
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border-stone);">
+            <div>
+              <strong>{{ ev.title }}</strong> (v{{ ev.version }}) · <span class="tag tag-neutral">{{ ev.get_status_display }}</span>
+              <div class="muted">{% if ev.event_datetime %}{{ ev.event_datetime|date:"F j, Y · g:i A" }} ({{ ev.time_zone }}){% else %}Date TBD{% endif %}</div>
+            </div>
+            <a href="{% url 'events:preview_event' event_id=ev.id %}" class="btn btn-primary btn-sm">Preview &amp; delivery log</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Add a recipient by hand</h2>
+    <p class="muted">Duplicate email addresses are automatically prevented.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit" id="btn-add-contact" class="btn btn-primary">Add to private list</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

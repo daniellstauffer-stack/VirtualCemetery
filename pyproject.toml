@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "siteapp.settings"
+python_files = ["tests/test_*.py", "test_*.py"]
+addopts = "-ra --strict-markers"

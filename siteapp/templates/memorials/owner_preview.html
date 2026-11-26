@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Preview My Memorial (Private){% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--memorial">
+  <div>
+    <span class="tag tag-warn">Private Preview Only — Not Published</span>
+    <span style="margin-left:0.5rem;">This shows exactly what an invited family member would see later. Your private wishes, funeral guest list, and <strong>{{ private_count }}</strong> private memory item(s) are hidden.</span>
+  </div>
+  <a href="{% url 'planning:dashboard' %}" class="btn btn-secondary btn-sm">Back to My Plan</a>
+</div>
+
+<section class="memorial-header">
+  <div class="portrait-frame">
+    {% if plan.portrait_static_asset %}
+      <img src="{% static 'images/' %}{{ plan.portrait_static_asset }}" alt="{{ plan.portrait_alt_text|default:plan.display_memorial_name }}">
+    {% else %}
+      <img src="{% static 'images/hero-garden.jpg' %}" alt="Botanical garden pathway placeholder.">
+    {% endif %}
+  </div>
+  <div>
+    <span class="eyebrow">Future Memorial Preview · {{ plan.get_memorial_audience_ceiling_display }}</span>
+    <h1>{{ plan.display_memorial_name }}</h1>
+    {% if plan.birth_year %}<p class="muted">Born {{ plan.birth_year }}</p>{% endif %}
+    <p class="lead">{{ plan.biography_draft|default:"You haven't written your life story yet. Visit Edit My Plan to tell your story in your own words."|linebreaksbr }}</p>
+  </div>
+</section>
+
+<section aria-labelledby="preview-gallery-heading">
+  <h2 id="preview-gallery-heading">Selected memories eligible for your memorial ({{ eligible_memories|length }})</h2>
+  {% if eligible_memories %}
+    <div class="grid-2">
+      {% for mem in eligible_memories %}
+        <article class="memory-card">
+          {% if mem.photo_display or mem.photo_original %}
+            <div class="memory-card-media">
+              <img src="{% url 'planning:memory_image' memory_id=mem.id %}" alt="{{ mem.alt_text }}">
+            </div>
+          {% elif mem.static_sample_image %}
+            <div class="memory-card-media">
+              <img src="{% static 'images/' %}{{ mem.static_sample_image }}" alt="{{ mem.alt_text }}">
+            </div>
+          {% endif %}
+          <div class="memory-card-body">
+            <span class="tag tag-memorial">{{ mem.get_audience_display }}</span>
+            <h3 style="margin-top:0.5rem;">{{ mem.title }}{% if mem.year_taken %} <span class="muted">({{ mem.year_taken }})</span>{% endif %}</h3>
+            <p>{{ mem.story|linebreaksbr }}</p>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card">
+      <p class="muted" style="margin:0;">None of your memories are currently marked for your memorial. All items stay private until you choose otherwise.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

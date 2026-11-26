@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Policies, Verification &amp; Commitments{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<span class="eyebrow">Pilot Governance · {{ PILOT_JURISDICTION }}</span>
+<h1>Our commitments to families</h1>
+<p class="lead">
+  A memorial's lasting value depends on clear rules for verification, privacy, error correction, data export, and long-term continuity.
+</p>
+
+<article class="card">
+  <h2>1. Death verification &amp; mistaken-report protection</h2>
+  <p>Inactivity can never trigger a death report or alter an account. When a steward or family member submits a death report, it creates a private case—nothing is published and no funeral invitations are sent.</p>
+  <p>A trained staff reviewer verifies independent supporting evidence and attempts to reach the account owner through their verified email or secondary channel. Silence alone is insufficient. Any conflicting claim pauses the case for a second independent reviewer.</p>
+  <p>If an error ever occurs, a living owner or family member can contact support via our <a href="{% url 'stewardship:dispute' %}">public dispute form</a> without signing into the account. Reviewers can immediately unpublish a memorial, revoke invite links, cancel queued notices, restore owner access, and record everyone who already received an email so a correction can be sent.</p>
+</article>
+
+<article class="card">
+  <h2>2. Evidence retention &amp; privacy</h2>
+  <p>Documents uploaded to verify a death are stored in an isolated private bucket accessible only to assigned staff reviewers signed in with multi-factor authentication. Guestbook moderation grants zero access to verification evidence. Evidence files are automatically scheduled for permanent deletion after 90 days.</p>
+</article>
+
+<article class="card">
+  <h2>3. Succession when no steward accepted</h2>
+  <p>If an account owner dies and no invited primary or backup steward accepted the role, our default policy is to keep all unreleased private planning material strictly private. Support follows our documented pilot succession review before granting any limited memorial care.</p>
+</article>
+
+<article class="card">
+  <h2>4. Portability, deletion &amp; photo takedowns</h2>
+  <p>Account owners can export a readable copy of their plan and a full ZIP archive of their memories at any time from <strong>My Plan</strong>. Deleting a memory permanently erases both the original upload and processed display copies. Visitors or family members can report abuse or request removal of a photo from any memorial page or by contacting <a href="mailto:{{ SITE_SUPPORT_EMAIL }}">{{ SITE_SUPPORT_EMAIL }}</a>.</p>
+</article>
+
+<article class="card">
+  <h2>5. Service continuity &amp; closure commitment</h2>
+  <p>We maintain encrypted database backups with tested isolated restore procedures. If {{ SITE_OPERATOR_NAME }} ever needs to wind down operations, we commit to giving at least 180 days of advance email notice to account owners and active stewards along with one-click full archive exports before shutting down.</p>
+</article>
+{% endblock %}

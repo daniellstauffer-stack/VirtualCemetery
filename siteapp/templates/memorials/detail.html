@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ memorial.full_name }} — Memorial{% endblock %}
+{% block meta_description %}In remembrance of {{ memorial.full_name }}.{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--memorial no-print">
+  <div>
+    <span class="tag tag-memorial">The Memorial · {{ memorial.get_audience_display }}</span>
+    {% if memorial.is_family_created %}
+      <span class="tag tag-neutral">{{ memorial.created_by_label }}</span>
+    {% endif %}
+    {% if memorial.status == 'suspended' %}
+      <span class="tag tag-danger">Suspended / Unpublished</span>
+    {% endif %}
+  </div>
+  <div class="button-row">
+    <a href="{% url 'memorials:print' slug=memorial.slug %}" class="btn btn-secondary btn-sm">Printable View</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'memorials:report_abuse' slug=memorial.slug %}" class="btn btn-secondary btn-sm">Report issue</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="memorial-header" aria-labelledby="memorial-name-heading">
+  <div class="portrait-frame">
+    {% if memorial.portrait_storage_path %}
+      <img src="{% url 'memorials:portrait_image' slug=memorial.slug %}" alt="{{ memorial.portrait_alt_text }}">
+    {% elif memorial.portrait_static_asset %}
+      <img src="{% static 'images/' %}{{ memorial.portrait_static_asset }}" alt="{{ memorial.portrait_alt_text }}">
+    {% else %}
+      <img src="{% static 'images/hero-garden.jpg' %}" alt="Quiet sunlit garden path.">
+    {% endif %}
+  </div>
+  <div>
+    <span class="eyebrow">In loving memory</span>
+    <h1 id="memorial-name-heading">{{ memorial.full_name }}</h1>
+    {% if memorial.life_dates_display %}
+      <p style="font-family:var(--font-serif);font-size:1.2rem;color:var(--ink-secondary);margin-bottom:0.85rem;">{{ memorial.life_dates_display }}</p>
+    {% endif %}
+    <p class="lead">{{ memorial.biography|linebreaksbr }}</p>
+    {% if flower_count %}
+      <span class="flower-badge" aria-label="{{ flower_count }} virtual flowers left">❀ {{ flower_count }} virtual flower{{ flower_count|pluralize }} left in remembrance</span>
+    {% endif %}
+  </div>
+</section>
+
+{% if memorial.steward_tribute %}
+<section class="card card-memorial" aria-labelledby="family-tribute-heading">
+  <span class="eyebrow">Family tribute</span>
+  <h2 id="family-tribute-heading" style="font-size:1.35rem;">Remembered by {{ memorial.steward_tribute_author }}</h2>
+  <p style="margin-bottom:0;font-style:italic;font-family:var(--font-serif);font-size:1.12rem;">“{{ memorial.steward_tribute|linebreaksbr }}”</p>
+</section>
+{% endif %}
+
+{% if relationships %}
+<section class="card" aria-labelledby="connections-heading">
+  <h2 id="connections-heading">Connected memorials</h2>
+  <p class="muted">Connections are agreed to by both sides and shown only when you have permission to visit both memorials.</p>
+  <div class="button-row">
+    {% for item in relationships %}
+      <div style="padding:0.6rem 0.9rem;border:1px solid var(--border-stone);border-radius:var(--radius-sm);background:var(--bg-canvas);display:inline-flex;align-items:center;gap:0.6rem;">
+        <span><strong>{{ item.label }}</strong> <a href="{% url 'memorials:detail' slug=item.other_memorial.slug %}">{{ item.other_memorial.full_name }}</a></span>
+        {% if is_manager %}
+          <form method="post" action="{% url 'memorials:respond_relationship' slug=memorial.slug relationship_id=item.relationship.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" name="action" value="withdraw" class="btn btn-secondary btn-sm">Withdraw</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if memories %}
+<section aria-labelledby="gallery-heading" style="margin-bottom:2rem;">
+  <h2 id="gallery-heading">Photographs &amp; stories</h2>
+  <div class="grid-2">
+    {% for m in memories %}
+      <article class="memory-card">
+        {% if m.display_media_path %}
+          <div class="memory-card-media">
+            <img src="{% url 'memorials:memory_image' slug=memorial.slug memory_id=m.id %}" alt="{{ m.alt_text }}">
+          </div>
+        {% elif m.static_sample_image %}
+          <div class="memory-card-media">
+            <img src="{% static 'images/' %}{{ m.static_sample_image }}" alt="{{ m.alt_text }}">
+          </div>
+        {% endif %}
+        <div class="memory-card-body">
+          <h3>{{ m.title }}{% if m.year_taken %} <span class="muted">({{ m.year_taken }})</span>{% endif %}</h3>
+          <p style="margin-bottom:0;">{{ m.story|linebreaksbr }}</p>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="split-layout" aria-labelledby="guestbook-heading">
+  <div>
+    <h2 id="guestbook-heading">Flowers &amp; guestbook</h2>
+    {% for entry in guestbook_page %}
+      <article class="tribute-item {% if entry.status == 'pending' %}tribute-item--pending{% endif %}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.45rem;">
+          <div>
+            <strong>{{ entry.author_display_name }}</strong>
+            {% if entry.relationship_note %}<span class="muted"> · {{ entry.relationship_note }}</span>{% endif %}
+            <div class="muted" style="font-size:0.84rem;">{{ entry.created_at|date:"F j, Y" }}</div>
+          </div>
+          <div>
+            {% if entry.flower %}<span class="flower-badge">❀ {{ entry.get_flower_display }}</span>{% endif %}
+            {% if entry.status == 'pending' %}
+              <span class="tag tag-warn">Pending steward approval (visible only to you &amp; steward)</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if entry.message %}<p style="margin-bottom:0.65rem;">{{ entry.message|linebreaksbr }}</p>{% endif %}
+
+        <div class="button-row no-print">
+          {% if is_manager and entry.status == 'pending' %}
+            <form method="post" action="{% url 'memorials:moderate_guestbook' slug=memorial.slug entry_id=entry.id %}">
+              {% csrf_token %}
+              <button type="submit" name="action" value="approve" class="btn btn-primary btn-sm">Approve note</button>
+            </form>
+          {% endif %}
+          {% if is_manager %}
+            <form method="post" action="{% url 'memorials:moderate_guestbook' slug=memorial.slug entry_id=entry.id %}">
+              {% csrf_token %}
+              <button type="submit" name="action" value="hide" class="btn btn-secondary btn-sm">Hide</button>
+            </form>
+          {% endif %}
+          {% if user.is_authenticated and entry.author_id == user.id %}
+            <form method="post" action="{% url 'memorials:moderate_guestbook' slug=memorial.slug entry_id=entry.id %}">
+              {% csrf_token %}
+              <button type="submit" name="action" value="delete_own" class="btn btn-secondary btn-sm">Remove my note</button>
+            </form>
+          {% elif user.is_authenticated %}
+            <a href="{% url 'memorials:report_abuse' slug=memorial.slug %}?entry={{ entry.id }}" class="muted" style="font-size:0.85rem;">Report note</a>
+          {% endif %}
+        </div>
+      </article>
+    {% empty %}
+      <div class="card"><p class="muted" style="margin:0;">No tributes have been shared yet.</p></div>
+    {% endfor %}
+
+    {% if guestbook_page.has_other_pages %}
+      <nav aria-label="Guestbook pages" class="button-row">
+        {% if guestbook_page.has_previous %}
+          <a href="?page={{ guestbook_page.previous_page_number }}" class="btn btn-secondary btn-sm">Previous</a>
+        {% endif %}
+        <span class="muted">Page {{ guestbook_page.number }} of {{ guestbook_page.paginator.num_pages }}</span>
+        {% if guestbook_page.has_next %}
+          <a href="?page={{ guestbook_page.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </div>
+
+  <aside class="no-print">
+    <div class="card">
+      <h3>Leave a flower or note</h3>
+      {% if not memorial.guestbook_open %}
+        <p class="muted">The steward has closed the guestbook to new contributions.</p>
+      {% elif not user.is_authenticated %}
+        <p class="muted">Please sign in to leave a free virtual flower or guestbook note.</p>
+        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-sm">Sign in to leave a tribute</a>
+      {% else %}
+        <p class="muted" style="font-size:0.88rem;">
+          Leaving a flower or note will display your name (<strong>{{ user.full_display_name }}</strong>) to people allowed to visit this memorial.
+          {% if memorial.guestbook_requires_approval %}Written notes await steward approval before appearing.{% endif %}
+        </p>
+        <form method="post" action="{% url 'memorials:add_guestbook' slug=memorial.slug %}">
+          {% csrf_token %}
+          {% for field in guestbook_form %}
+            <div class="form-field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endfor %}
+          <button type="submit" id="btn-leave-tribute" class="btn btn-primary">Leave flower / note</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if is_manager %}
+      <div class="card card-private">
+        <h3>Steward controls</h3>
+        <div class="button-row" style="margin-bottom:1rem;">
+          <form method="post" action="{% url 'memorials:toggle_guestbook' slug=memorial.slug %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">{% if memorial.guestbook_open %}Close guestbook{% else %}Re-open guestbook{% endif %}</button>
+          </form>
+          {% if memorial.audience == 'public' %}
+            <form method="post" action="{% url 'memorials:change_audience' slug=memorial.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="audience" value="invited_only">
+              <button type="submit" class="btn btn-warm btn-sm">Make invited-only</button>
+            </form>
+          {% endif %}
+        </div>
+
+        <h4 style="font-size:1rem;">Invite a family viewer (expiring link)</h4>
+        <form method="post" action="{% url 'memorials:create_invite' slug=memorial.slug %}">
+          {% csrf_token %}
+          {% for field in invite_form %}
+            <div class="form-field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary btn-sm">Send private memorial invite</button>
+        </form>
+
+        {% if active_invites %}
+          <ul style="padding-left:1rem;font-size:0.86rem;margin-top:0.75rem;">
+            {% for inv in active_invites %}
+              <li>{{ inv.intended_email }} — {% if inv.redeemed_at %}Redeemed{% else %}Pending{% endif %}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        <hr style="border:0;border-top:1px solid var(--border-stone);margin:1.25rem 0;">
+        <h4 style="font-size:1rem;">Propose opt-in memorial connection</h4>
+        <p class="muted" style="font-size:0.85rem;">Both sides must agree. Connections never grant access to private plans.</p>
+        <form method="post" action="{% url 'memorials:propose_relationship' slug=memorial.slug %}">
+          {% csrf_token %}
+          {% for field in rel_form %}
+            <div class="form-field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-secondary btn-sm">Propose connection</button>
+        </form>
+
+        {% if pending_rel_requests %}
+          <h4 style="font-size:1rem;margin-top:1rem;">Pending connection requests</h4>
+          {% for req in pending_rel_requests %}
+            <div style="padding:0.5rem 0;border-top:1px solid var(--border-stone);">
+              <p style="margin:0 0 0.4rem;"><strong>{{ req.from_memorial.full_name }}</strong> proposed: “{{ req.label_from_to }}”</p>
+              <form method="post" action="{% url 'memorials:respond_relationship' slug=memorial.slug relationship_id=req.id %}" class="button-row">
+                {% csrf_token %}
+                <button type="submit" name="action" value="accept" class="btn btn-primary btn-sm">Accept</button>
+                <button type="submit" name="action" value="withdraw" class="btn btn-secondary btn-sm">Decline</button>
+              </form>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </aside>
+</section>
+{% endblock %}

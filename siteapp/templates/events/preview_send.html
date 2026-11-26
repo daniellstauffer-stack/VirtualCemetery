@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Preview &amp; Send Funeral Invitations{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--private">
+  <div><strong>Funeral Invitation Preview (v{{ event.version }})</strong> — Individual delivery, duplicate suppression, and one-click recipient opt-out.</div>
+  <a href="{% url 'events:edit_event' event_id=event.id owner_person_id=event.owner.person_id %}" class="btn btn-secondary btn-sm">Edit details</a>
+</div>
+
+<h1>Preview before sending: {{ event.title }}</h1>
+
+<div class="split-layout">
+  <div class="card card-memorial">
+    <h2>Exact details recipients will see</h2>
+    <p><strong>In remembrance of:</strong> {{ event.owner.full_display_name }}</p>
+    <p><strong>Date &amp; time:</strong> {% if event.event_datetime %}{{ event.event_datetime|date:"F j, Y · g:i A" }}{% else %}To be confirmed{% endif %} (<strong>{{ event.time_zone }}</strong>)</p>
+    <p><strong>Venue (private to event audience):</strong> {{ event.location_name|default:"Not specified" }}<br>{{ event.location_address|linebreaksbr }}</p>
+    {% if event.livestream_url %}
+      <p><strong>Private livestream link:</strong> <code>{{ event.livestream_url }}</code></p>
+    {% endif %}
+    <p><strong>Wording:</strong><br>{{ event.invitation_wording|default:"(No custom message added)"|linebreaksbr }}</p>
+    <p class="muted" style="margin-bottom:0;">Each recipient receives an individual email with a one-click link to decline any further messages.</p>
+  </div>
+
+  <div class="card">
+    <h2>Confirm &amp; send individually</h2>
+    {% if not can_send_now %}
+      <div class="alert alert-warning">
+        <strong>Sending is locked:</strong> Funeral invitations can only be sent after a death report for {{ event.owner.full_display_name }} has been verified and approved by staff.
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'events:send_invitations' event_id=event.id %}">
+      {% csrf_token %}
+      <p class="muted">Select recipients for version {{ event.version }} (already-sent recipients are automatically suppressed):</p>
+      <ul class="checkbox-list" style="margin-bottom:1.25rem;">
+        {% for c in contacts %}
+          <li style="padding:0.45rem 0;border-bottom:1px solid var(--border-stone);">
+            <label class="checkbox-inline">
+              <input type="checkbox" name="selected_contacts" value="{{ c.id }}" {% if not c.opted_out %}checked{% else %}disabled{% endif %}>
+              <span><strong>{{ c.full_name }}</strong> ({{ c.email }}){% if c.opted_out %} <span class="tag tag-danger">Opted out</span>{% endif %}</span>
+            </label>
+          </li>
+        {% empty %}
+          <li class="muted">No contacts on this list yet.</li>
+        {% endfor %}
+      </ul>
+      <button type="submit" id="btn-confirm-send-invites" class="btn btn-warm" {% if not can_send_now or not contacts %}disabled{% endif %}>
+        Confirm preview &amp; queue individual invitations
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Delivery log &amp; issue tracking ({{ deliveries|length }})</h2>
+  {% if deliveries %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Recipient</th><th>Version</th><th>Status</th><th>Sent</th><th>Notes / Errors</th></tr></thead>
+        <tbody>
+          {% for d in deliveries %}
+            <tr>
+              <td><strong>{{ d.recipient_name }}</strong><div class="muted">{{ d.recipient_email }}</div></td>
+              <td>v{{ d.event_version }}</td>
+              <td><span class="tag {% if d.status == 'sent' %}tag-private{% elif d.status == 'needs_reconciliation' or d.status == 'failed' or d.status == 'bounced' %}tag-danger{% else %}tag-warn{% endif %}">{{ d.get_status_display }}</span></td>
+              <td>{{ d.sent_at|date:"M j, Y · g:i A"|default:"—" }}</td>
+              <td class="muted">{{ d.last_error|default:"—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted" style="margin:0;">No invitations have been sent for this event yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Prepare &amp; Publish Memorial — {{ owner.full_display_name }}{% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="space-banner space-banner--memorial">
+  <div><strong>Steward Release Preparation</strong> for {{ owner.full_display_name }}</div>
+  <a href="{% url 'stewardship:workspace' owner_person_id=owner.person_id %}" class="btn btn-secondary btn-sm">Back to workspace</a>
+</div>
+
+<div class="card">
+  <h1>Prepare &amp; publish memorial snapshot</h1>
+  <p>
+    Publishing creates a <strong>separate approved snapshot</strong>. Only the memories you select below will appear on the memorial page—private wishes and funeral contact lists are never published.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <h2>1. Select memories to include ({{ eligible_memories|length }} allowed by owner)</h2>
+    {% if eligible_memories %}
+      <ul class="checkbox-list" style="margin-bottom:1.5rem;">
+        {% for m in eligible_memories %}
+          <li style="padding:0.75rem;border:1px solid var(--border-stone);border-radius:var(--radius-sm);margin-bottom:0.65rem;">
+            <label class="checkbox-inline">
+              <input type="checkbox" name="selected_memories" value="{{ m.id }}" checked>
+              <span>
+                <strong>{{ m.title }}</strong>{% if m.year_taken %} ({{ m.year_taken }}){% endif %}
+                <span class="tag tag-memorial">{{ m.get_audience_display }}</span>
+                <div class="muted">{{ m.story|truncatewords:30 }}</div>
+              </span>
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No memories were marked for memorial display by the owner.</p>
+    {% endif %}
+
+    <h2>2. Audience (within owner’s ceiling)</h2>
+    <p class="muted">Owner’s chosen maximum audience ceiling: <strong>{{ plan.get_memorial_audience_ceiling_display }}</strong>. You may keep it narrower, never wider.</p>
+    <div class="form-field">
+      <label for="id-audience">Published memorial audience</label>
+      <select id="id-audience" name="audience">
+        <option value="invited_only" {% if existing_memorial.audience == 'invited_only' or not existing_memorial %}selected{% endif %}>Invited family and friends only</option>
+        {% if plan.memorial_audience_ceiling == 'public' %}
+          <option value="public" {% if existing_memorial.audience == 'public' %}selected{% endif %}>Public memorial (anyone with link)</option>
+        {% endif %}
+      </select>
+    </div>
+
+    {% if plan.allow_site_search %}
+      <div class="form-field">
+        <label class="checkbox-inline">
+          <input type="checkbox" name="allow_site_search" {% if existing_memorial.allow_site_search %}checked{% endif %}>
+          <span>Include this public memorial in Virtual Cemetery site search</span>
+        </label>
+      </div>
+    {% endif %}
+
+    <h2>3. Optional family-written tribute (credited to you)</h2>
+    <div class="form-field">
+      <label for="id-steward-tribute">Family tribute (will display your name: {{ user.full_display_name }})</label>
+      <textarea id="id-steward-tribute" name="steward_tribute" rows="4">{{ existing_memorial.steward_tribute|default:"" }}</textarea>
+    </div>
+
+    <div class="button-row">
+      <button type="submit" id="btn-publish-memorial" class="btn btn-primary">Publish approved memorial snapshot</button>
+      <a href="{% url 'stewardship:workspace' owner_person_id=owner.person_id %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Local Funeral Homes &amp; Estate Lawyers{% endblock %}
+
+{% block content %}
+<span class="eyebrow">Local Professional Directory · {{ PILOT_JURISDICTION }}</span>
+<h1>Find local funeral homes &amp; estate-planning lawyers</h1>
+<p class="lead">
+  Search by town or postal code. We show verified specialties, public ratings with cited sources, and official state licensing directories—even for small or unrated areas.
+</p>
+
+<form method="get" class="card" style="display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:0.85rem;align-items:end;">
+  <div>
+    <label for="id-dir-location">Town or postal code</label>
+    <input type="text" id="id-dir-location" name="location" value="{{ location }}" placeholder="e.g., Portland, Eugene, 97205">
+  </div>
+  <div>
+    <label for="id-dir-category">Service type</label>
+    <select id="id-dir-category" name="category">
+      <option value="">All professionals</option>
+      <option value="funeral_home" {% if category == 'funeral_home' %}selected{% endif %}>Funeral homes &amp; burial care</option>
+      <option value="estate_lawyer" {% if category == 'estate_lawyer' %}selected{% endif %}>Estate-planning attorneys</option>
+    </select>
+  </div>
+  <div>
+    <label for="id-dir-sort">Sort order</label>
+    <select id="id-dir-sort" name="sort">
+      <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest rated &amp; review count</option>
+      <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Alphabetical (A–Z)</option>
+    </select>
+  </div>
+  <button type="submit" id="btn-dir-search" class="btn btn-primary">Search</button>
+</form>
+
+<p class="muted" style="margin-bottom:1.25rem;"><strong>How results are sorted:</strong> {{ sort_explanation }}</p>
+
+{% if providers %}
+  <div class="grid-2" style="margin-bottom:2rem;">
+    {% for p in providers %}
+      <article class="card" style="margin-bottom:0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
+          <span class="tag tag-private">{{ p.get_category_display }}</span>
+          {% if p.is_paid_placement %}<span class="tag tag-warn">Paid placement</span>{% endif %}
+        </div>
+        <h2 style="font-size:1.3rem;margin-top:0.65rem;">{{ p.name }}</h2>
+        <p class="muted" style="margin-bottom:0.5rem;">{{ p.city }}, {{ p.state }} {{ p.postal_code }}</p>
+        {% if p.verified_specialty %}<p><strong>Specialty:</strong> {{ p.verified_specialty }}</p>{% endif %}
+        {% if p.rating %}
+          <p><strong>Rating:</strong> {{ p.rating }} / 5 ({{ p.review_count }} reviews — <em>{{ p.review_source }}</em>)</p>
+        {% endif %}
+        <p class="muted">
+          {% if p.phone %}Phone: {{ p.phone }}<br>{% endif %}
+          {% if p.website %}<a href="{{ p.website }}" rel="noopener noreferrer" target="_blank">Provider website</a>{% endif %}
+          {% if p.licensing_lookup_url %} · <a href="{{ p.licensing_lookup_url }}" rel="noopener noreferrer" target="_blank">Verify state license</a>{% endif %}
+        </p>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">
+    <p>No curated pilot listings matched “{{ location }}”. Use the official licensing directories below to find verified professionals anywhere in the region:</p>
+  </div>
+{% endif %}
+
+<section class="card card-private" aria-labelledby="licensing-heading">
+  <h2 id="licensing-heading">Official state licensing &amp; professional directories</h2>
+  <p class="muted">Always available, including for rural or unrated areas. Google Places expansion status: <strong>{% if google_places_enabled %}Active{% else %}Placeholder (curated pilot list active){% endif %}</strong>.</p>
+  <ul>
+    {% for link in licensing_links %}
+      <li style="margin-bottom:0.65rem;">
+        <a href="{{ link.url }}" rel="noopener noreferrer" target="_blank"><strong>{{ link.title }}</strong></a> ({{ link.category }})<br>
+        <span class="muted">{{ link.description }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

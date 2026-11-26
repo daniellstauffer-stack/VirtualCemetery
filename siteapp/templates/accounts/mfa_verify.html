@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Confirm Your Identity (MFA){% endblock %}
+{% block container_class %}container-narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <span class="eyebrow">Step-up multi-factor check</span>
+  <h1>Confirm it is really you</h1>
+  <p>
+    High-impact actions—such as replacing or revoking a memorial steward, or opening the restricted staff verification desk—require a fresh multi-factor verification check.
+  </p>
+
+  {% if demo_code %}
+    <div class="alert alert-info">
+      <strong>Local auth emulator mode:</strong> Enter verification code <code>{{ demo_code }}</code>.
+      In staging and production, Google Cloud Identity Platform sends a real MFA challenge.
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <div class="form-field">
+      <label for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+      {{ form.code }}
+      <span class="helptext">{{ form.code.help_text }}</span>
+      {{ form.code.errors }}
+    </div>
+    <button type="submit" id="btn-mfa-submit" class="btn btn-primary">Verify and continue</button>
+  </form>
+</div>
+{% endblock %}
