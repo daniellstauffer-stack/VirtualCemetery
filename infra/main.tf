@@ -49,21 +49,25 @@ resource "google_artifact_registry_repository" "app" {
 resource "google_service_account" "web" {
   account_id   = "${local.prefix}-web"
   display_name = "Virtual Cemetery Web Service (${var.environment})"
+  depends_on   = [google_project_service.apis]
 }
 
 resource "google_service_account" "worker" {
   account_id   = "${local.prefix}-worker"
   display_name = "Virtual Cemetery Private Worker (${var.environment})"
+  depends_on   = [google_project_service.apis]
 }
 
 resource "google_service_account" "tasks_invoker" {
   account_id   = "${local.prefix}-tasks-invoker"
   display_name = "Virtual Cemetery Cloud Tasks Invoker (${var.environment})"
+  depends_on   = [google_project_service.apis]
 }
 
 resource "google_service_account" "github_deployer" {
   account_id   = "${local.prefix}-gh-deploy"
   display_name = "Virtual Cemetery GitHub Actions Deployer (${var.environment})"
+  depends_on   = [google_project_service.apis]
 }
 
 # --- Cloud SQL for PostgreSQL 16 (with Backups & PITR) -----------------------
