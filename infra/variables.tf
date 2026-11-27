@@ -25,15 +25,15 @@ variable "github_repository" {
 }
 
 variable "container_image" {
-  description = "Full Artifact Registry image URI pinned by @sha256 digest."
+  description = "Bootstrap container image for initial Cloud Run creation (GitHub Actions deploys real images by @sha256 digest)."
   type        = string
-  default     = "us-west1-docker.pkg.dev/YOUR_GCP_PROJECT_ID/virtual-cemetery/app:latest"
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
 variable "site_base_url" {
   description = "Public HTTPS base URL for this environment."
   type        = string
-  default     = "https://staging.example-virtualcemetery.org"
+  default     = "https://staging.virtualcemetery.org"
 }
 
 variable "db_tier" {

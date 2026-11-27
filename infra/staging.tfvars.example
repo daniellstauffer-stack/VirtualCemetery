@@ -1,13 +1,15 @@
-# Copy to `staging.tfvars` (gitignored) and replace placeholder values before running Terraform.
-project_id              = "your-vc-staging-gcp-project-id"
+# Copy to `staging.tfvars` (gitignored) before running Terraform:
+#   cp staging.tfvars.example staging.tfvars
+#   terraform init && terraform apply -var-file=staging.tfvars
+project_id              = "vc-staging-dls1995"
 region                  = "us-west1"
 environment             = "staging"
 github_repository       = "daniellstauffer-stack/VirtualCemetery"
-site_base_url           = "https://staging.example-virtualcemetery.org"
+site_base_url           = "https://staging.virtualcemetery.org"
 db_tier                 = "db-f1-micro"
 db_high_availability    = false
 web_max_instances       = 3
 worker_max_instances    = 2
 evidence_retention_days = 30
-billing_account_id      = "012345-6789AB-CDEF01"
+billing_account_id      = "0136B6-682EC5-BEC53A"
 monthly_budget_usd      = 50

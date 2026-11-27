@@ -41,7 +41,7 @@ CSRF_TRUSTED_ORIGINS = _env_list(
 
 SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "http://localhost:8000").rstrip("/")
 PILOT_JURISDICTION = os.environ.get("PILOT_JURISDICTION", "Oregon, United States")
-SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "support@example-virtualcemetery.org")
+SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "support@virtualcemetery.org")
 OPERATOR_NAME = os.environ.get("OPERATOR_NAME", "Virtual Cemetery Pilot Operator")
 
 INSTALLED_APPS = [
@@ -186,7 +186,7 @@ WORKER_SHARED_SECRET = os.environ.get("WORKER_SHARED_SECRET", "replace-with-loca
 
 # --- Email Provider (Postmark / SMTP / Console) ------------------------------
 EMAIL_PROVIDER = os.environ.get("EMAIL_PROVIDER", "console")
-EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_FROM_ADDRESS", "no-reply@example-virtualcemetery.org")
+EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_FROM_ADDRESS", "no-reply@virtualcemetery.org")
 EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Virtual Cemetery")
 POSTMARK_SERVER_TOKEN = os.environ.get("POSTMARK_SERVER_TOKEN", "your-postmark-server-token-placeholder")
 POSTMARK_MESSAGE_STREAM = os.environ.get("POSTMARK_MESSAGE_STREAM", "outbound")

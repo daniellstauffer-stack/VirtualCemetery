@@ -22,7 +22,12 @@ locals {
     "iamcredentials.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
+    "billingbudgets.googleapis.com",
   ]
+}
+
+data "google_project" "current" {
+  project_id = var.project_id
 }
 
 resource "google_project_service" "apis" {
@@ -299,6 +304,10 @@ resource "google_cloud_run_v2_service" "worker" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
+  }
+
   depends_on = [google_project_service.apis]
 }
 
@@ -389,6 +398,10 @@ resource "google_cloud_run_v2_service" "web" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
+  }
+
   depends_on = [google_project_service.apis]
 }
 
@@ -426,6 +439,10 @@ resource "google_cloud_run_v2_job" "migrate" {
         }
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [template[0].template[0].containers[0].image]
   }
 
   depends_on = [google_project_service.apis]
@@ -482,6 +499,17 @@ resource "google_service_account_iam_member" "github_wif_binding" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repository}"
 }
 
+resource "google_project_iam_member" "github_deployer_roles" {
+  for_each = toset([
+    "roles/artifactregistry.writer",
+    "roles/run.admin",
+    "roles/iam.serviceAccountUser",
+  ])
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.github_deployer.email}"
+}
+
 # --- Optional Billing Budget Alert (alerts operators; does not cap spend) ----
 resource "google_billing_budget" "monthly" {
   count           = var.billing_account_id != "" ? 1 : 0
@@ -489,7 +517,7 @@ resource "google_billing_budget" "monthly" {
   display_name    = "Virtual Cemetery ${var.environment} Monthly Budget"
 
   budget_filter {
-    projects = ["projects/${var.project_id}"]
+    projects = ["projects/${data.google_project.current.number}"]
   }
 
   amount {
@@ -508,4 +536,6 @@ resource "google_billing_budget" "monthly" {
   threshold_rules {
     threshold_percent = 1.0
   }
+
+  depends_on = [google_project_service.apis]
 }

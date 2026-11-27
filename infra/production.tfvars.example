@@ -1,13 +1,15 @@
-# Copy to `production.tfvars` (gitignored) and replace placeholder values before running Terraform.
-project_id              = "your-vc-production-gcp-project-id"
+# Copy to `production.tfvars` (gitignored) before running Terraform:
+#   cp production.tfvars.example production.tfvars
+#   terraform init && terraform apply -var-file=production.tfvars
+project_id              = "vc-prod-dls1995"
 region                  = "us-west1"
 environment             = "production"
 github_repository       = "daniellstauffer-stack/VirtualCemetery"
-site_base_url           = "https://www.example-virtualcemetery.org"
+site_base_url           = "https://virtualcemetery.org"
 db_tier                 = "db-custom-1-3840"
 db_high_availability    = false
 web_max_instances       = 10
 worker_max_instances    = 5
 evidence_retention_days = 90
-billing_account_id      = "012345-6789AB-CDEF01"
+billing_account_id      = "0136B6-682EC5-BEC53A"
 monthly_budget_usd      = 150
