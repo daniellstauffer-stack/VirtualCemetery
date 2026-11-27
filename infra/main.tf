@@ -20,6 +20,7 @@ locals {
     "identitytoolkit.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
     "billingbudgets.googleapis.com",
